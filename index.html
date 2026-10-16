@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lilac Web</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jersey+15&family=Barlow:wght@400;600&display=swap">
+<style>
+  :root { color-scheme: dark; --bg:#15121c; --panel:#1f1a29; --line:#3a3248; --fg:#e8e4f0; --mut:#9a91ab; --lilac:#c8a2ff; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 "Barlow", Arial, sans-serif; padding:40px max(16px, env(safe-area-inset-left)); }
+  .wrap { max-width:720px; margin:0 auto; display:grid; gap:20px; }
+  h1 { font:400 48px/1 "Jersey 15", monospace; margin:0; } h1 span { color:var(--lilac); }
+  p { color:var(--mut); margin:0; }
+  .apps { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:14px; }
+  a.app { display:grid; gap:6px; padding:18px; border:1px solid var(--line); border-radius:14px; background:var(--panel); color:var(--fg); text-decoration:none; }
+  a.app:hover, a.app:focus-visible { border-color:var(--lilac); outline:none; }
+  a.app b { font:400 28px/1 "Jersey 15", monospace; color:var(--lilac); }
+  .soon { opacity:.5; pointer-events:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Lilac <span>Web</span></h1>
+  <p>Lilac's instruments in the browser. The music engine is the plugins' own C++ code, compiled to WebAssembly.</p>
+  <div class="apps">
+    <a class="app" href="fret/"><b>Fret</b><span>Scales, chords and grips on the guitar neck, with sound.</span></a>
+    <a class="app soon" href="#" aria-disabled="true"><b>Lilac</b><span>Chord instrument. Coming later.</span></a>
+  </div>
+</div>
+</body>
+</html>
