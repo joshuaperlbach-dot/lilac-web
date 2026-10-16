@@ -5,171 +5,140 @@
 <meta charset="utf-8">
 <title>Lilac Fret Web</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jersey+15&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Jersey+15&family=Barlow:wght@400;600&display=swap">
 <style>
-/* Layout: one instrument panel — control strip, the neck as the hero, chord cards below.
-   Single dark look on purpose: it mirrors the plugin's baked lilac-on-plum chrome. */
+/* Layout: the plugin's V3 art skin. A 4096x2160 stage (baked background, dial frame
+   sequences, LED matrix) scaled to the window; the live neck and chord strip sit in the
+   bubble rect exactly where the plugin puts them. Single dark look, like the plugin. */
+@font-face { font-family: "Jersey 10"; src: url(assets/Jersey10-Regular.ttf) format("truetype"); font-display: swap; }
+@font-face { font-family: "Jersey 15"; src: url(assets/Jersey15-Regular.ttf) format("truetype"); font-display: swap; }
+@font-face { font-family: "Barlow"; src: url(assets/Barlow-Regular.ttf) format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Barlow"; src: url(assets/Barlow-SemiBold.ttf) format("truetype"); font-weight: 600; font-display: swap; }
 :root {
   color-scheme: dark;
-  --bg: #15121c;          /* case */
-  --panel: #1f1a29;       /* bubble interior */
-  --line: #3a3248;        /* hairlines, frets */
-  --fg: #e8e4f0;          /* primary text */
-  --mut: #9a91ab;         /* labels */
-  --lilac: #c8a2ff;       /* scale dots, selection */
-  --root: #26bfdb;        /* root notes (Lilac's root blue) */
-  --gold: #ffae00;        /* standout notes */
-  --pink: #ff78ce;        /* grip on the neck */
-  --dot-text: #17141d;
-  --wood: #241d2f;
-  --font-display: "Jersey 15", "Courier New", monospace;
-  --font-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --bg: #0b0910;  --panel: #1b1626; --panel-brd: #2a2438; --board: #221c2e;
+  --fg: #e8e4f0;  --mut: #8a8496;   --dim: #6e6880;
+  --lilac: #b18cff; --root: #4cc3e8; --gold: #ffd166; --rose: #ff6f91;
+  --teal: #3fd2c7; --amber: #ffb648; --dot-text: #17141d;
+  --nut: #d6cfe6; --strings: #746d88; --wire: #453f58; --hair: #3a3450;
 }
-html, body { background: var(--bg); color: var(--fg); }
-body {
-  font-family: var(--font-body); font-size: 15px; line-height: 1.45;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 20px 32px;
-}
-.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 18px; }
-header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; }
-h1 { font-family: var(--font-display); font-weight: 400; font-size: 40px; line-height: 1; margin: 0; letter-spacing: .01em; }
-h1 span { color: var(--lilac); }
-.sub { color: var(--mut); margin: 0; }
+html, body { background: var(--bg); color: var(--fg); margin: 0; }
+body { font-family: "Barlow", "Helvetica Neue", Arial, sans-serif;
+       padding-left: max(0px, env(safe-area-inset-left, 0px)); padding-right: max(0px, env(safe-area-inset-right, 0px)); }
+.scroller { overflow-x: auto; }
+#stage { position: relative; width: max(100%, 980px); aspect-ratio: 4096 / 2160; margin: 0 auto; user-select: none; -webkit-user-select: none; }
+#chrome { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+.hit { position: absolute; opacity: 0; cursor: pointer; font-size: 16px; appearance: none; border: 0; background: none; }
+select.hit { -webkit-appearance: none; }
+.hit:focus-visible { opacity: .25; outline: 2px solid var(--lilac); }
 
-.controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
-.field { display: grid; gap: 4px; }
-.field label, .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--mut); }
-select {
-  font: inherit; color: var(--fg); background: var(--panel); border: 1px solid var(--line);
-  border-radius: 8px; padding: 7px 30px 7px 10px; min-width: 0; appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--mut) 50%), linear-gradient(135deg, var(--mut) 50%, transparent 50%);
-  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size: 5px 5px; background-repeat: no-repeat;
-}
-.toggles { display: flex; gap: 6px; flex-wrap: wrap; }
-.tog {
-  font: inherit; font-weight: 500; font-size: 14px; color: var(--mut); background: var(--panel);
-  border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer;
-}
-.tog[aria-pressed="true"] { background: var(--lilac); color: var(--dot-text); border-color: var(--lilac); }
-select:focus-visible, .tog:focus-visible, .card:focus-visible, .step:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
-
-.neck { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
-.neck-scroll { overflow-x: auto; }
-#board { display: block; width: 100%; min-width: 760px; height: 230px; cursor: pointer; touch-action: manipulation; }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; color: var(--mut); font-size: 13px; }
-.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
-
-.chords-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 16px; }
-.chords-head h2 { font-family: var(--font-display); font-weight: 400; font-size: 26px; margin: 0; }
-.hint { color: var(--mut); font-size: 13px; margin: 0; }
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-.card {
-  background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 10px 8px;
-  display: grid; gap: 4px; cursor: pointer; text-align: left; color: inherit; font: inherit;
-}
+#bubble { position: absolute; display: flex; flex-direction: column; }
+#neck { display: block; width: 100%; touch-action: manipulation; cursor: pointer; }
+.panel { background: var(--panel); border: 1px solid var(--panel-brd); border-radius: 10px; display: flex; flex-direction: column; min-height: 0; }
+.head { display: flex; align-items: center; gap: 6px; padding: 8px 10px 4px; min-width: 0; }
+.head h2 { font: 600 13px/1 "Barlow", sans-serif; color: #e8e4f0; margin: 0; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.head h2 span { color: var(--mut); font-weight: 400; }
+.pill { font: 500 12px/1 "Barlow", sans-serif; color: var(--mut); background: #221c30; border: 1px solid var(--panel-brd); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
+.pill[aria-pressed="true"] { background: var(--lilac); color: var(--dot-text); border-color: var(--lilac); }
+.pill:focus-visible, .card:focus-visible { outline: 2px solid var(--lilac); outline-offset: 2px; }
+.strip { flex: 1; min-height: 0; overflow-x: auto; overflow-y: hidden; display: flex; gap: 8px; padding: 4px 10px 10px; }
+.card { flex: 0 0 auto; background: #151020; border: 1px solid var(--panel-brd); border-radius: 12px; display: flex; flex-direction: column; cursor: pointer; position: relative; }
 .card.sel { border-color: var(--lilac); box-shadow: 0 0 0 1px var(--lilac) inset; }
-.card .name { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
-.card .roman { font-family: var(--font-display); font-size: 22px; color: var(--lilac); line-height: 1; }
-.card .cn { font-weight: 600; font-size: 16px; }
-.card canvas { width: 100%; height: 150px; display: block; }
-.card .nav { display: flex; justify-content: space-between; align-items: center; color: var(--mut); font-size: 12px; font-variant-numeric: tabular-nums; }
-.step { font: inherit; background: none; border: 1px solid var(--line); color: var(--fg); border-radius: 6px; width: 26px; height: 22px; cursor: pointer; line-height: 1; }
-.step:disabled { opacity: .35; cursor: default; }
-
-.status { color: var(--mut); font-size: 13px; }
-.status b { color: var(--fg); font-weight: 600; }
-@media (max-width: 520px) { h1 { font-size: 32px; } .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.card canvas { display: block; flex: 1; min-height: 0; width: 100%; }
+.card .nav { display: flex; justify-content: space-between; align-items: center; padding: 0 6px 6px; font: 12px/1 "Barlow", sans-serif; color: var(--mut); font-variant-numeric: tabular-nums; }
+.step { font: 14px/1 "Barlow", sans-serif; background: none; border: 1px solid var(--panel-brd); color: var(--fg); border-radius: 6px; width: 24px; height: 20px; cursor: pointer; padding: 0; }
+.step:disabled { opacity: .3; cursor: default; }
+#status { color: var(--dim); font-size: 12px; text-align: center; padding: 8px 16px 16px; margin: 0; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
-<div class="wrap">
-  <header>
-    <h1>Lilac <span>Fret</span></h1>
-    <p class="sub">Browser test: the plugin's own chord and grip engine, compiled to WebAssembly.</p>
-  </header>
+<div class="scroller">
+  <div id="stage">
+    <canvas id="chrome"></canvas>
 
-  <div class="controls">
-    <div class="field"><label for="root">Root</label><select id="root"></select></div>
-    <div class="field"><label for="scale">Scale</label><select id="scale"></select></div>
-    <div class="field"><label for="tuning">Tuning</label><select id="tuning"></select></div>
-    <div class="field"><span class="lbl">View</span>
-      <div class="toggles">
-        <button class="tog" id="sevenths" aria-pressed="false">7ths</button>
-        <button class="tog" id="degrees" aria-pressed="false">Degrees</button>
-        <button class="tog" id="sound" aria-pressed="true">Sound</button>
+    <!-- invisible hit zones over the baked chrome (same rects as the plugin's resized()) -->
+    <select class="hit" id="scaleSel"  aria-label="Scale"   data-r="1600,88,715,190"></select>
+    <select class="hit" id="tuningSel" aria-label="Tuning"  data-r="1600,282,715,190"></select>
+    <select class="hit" id="rootSel"   aria-label="Root"    data-r="2530,203,140,140"></select>
+    <select class="hit" id="posSel"    aria-label="Position" data-r="2976,244,140,140"></select>
+    <button class="hit" id="par0" aria-label="Parallel scale 1 on/off" data-r="3324,66,140,140"></button>
+    <button class="hit" id="par1" aria-label="Parallel scale 2 on/off" data-r="3324,284,140,140"></button>
+    <select class="hit" id="par0Sel" aria-label="Parallel scale 1" data-r="3480,66,545,190"></select>
+    <select class="hit" id="par1Sel" aria-label="Parallel scale 2" data-r="3480,284,545,190"></select>
+
+    <div id="bubble">
+      <canvas id="neck" aria-label="Fretboard"></canvas>
+      <div class="panel" id="chordsPanel">
+        <div class="head">
+          <h2 id="chordsHead">Chords in this scale <span>&middot; tap to hear, arrows for other frettings</span></h2>
+          <button class="pill" id="degrees" aria-pressed="false">Degrees</button>
+          <button class="pill" id="sevenths" aria-pressed="false">7ths</button>
+          <button class="pill" id="sound" aria-pressed="true">Sound</button>
+        </div>
+        <div class="strip" id="strip"></div>
       </div>
     </div>
   </div>
-
-  <section class="neck" aria-label="Fretboard">
-    <div class="neck-scroll"><canvas id="board"></canvas></div>
-    <div class="legend">
-      <span><i style="background:var(--root)"></i>Root</span>
-      <span><i style="background:var(--lilac)"></i>Scale note</span>
-      <span><i style="background:var(--gold)"></i>Characteristic note</span>
-      <span><i style="background:var(--pink)"></i>Selected grip</span>
-      <span>Click a note to hear it.</span>
-    </div>
-  </section>
-
-  <section>
-    <div class="chords-head">
-      <h2>Chords in this scale</h2>
-      <p class="hint">Click a chord to strum it and show the grip on the neck. Arrows step through other frettings.</p>
-    </div>
-    <div class="cards" id="cards"></div>
-  </section>
-
-  <p class="status" id="status">Loading engine&hellip;</p>
 </div>
+<p id="status">Loading engine&hellip;</p>
 
 <script>
 (() => {
-  // ---------- engine (fret.wasm = Source/FretEngine.cpp + web/fret_wasm.cpp) ----------
+  // ================= V3 layout: numbers straight from Source/PluginEditor.cpp (namespace v3) ==========
+  const V = {
+    W: 4096, H: 2160,
+    mqX: 100, mqRight: 1520, mqBaseline: 400, mqFontPx: 505, mqClipY: 60, mqClipH: 420, mqPad: 14, mqWrapGap: 320,
+    scaleLabelX: 2253.47, scaleLabelY: 154.61, scaleValX: 2254.89, scaleValY: 237.82,
+    tunLabelX: 1668.47, tunLabelY: 331.61, tunValX: 1669.89, tunValY: 414.82, screenValMaxW: 620,
+    lDial: [2203.01, 81.03, 602, 389], rDial: [2845.4, 79.23, 664, 401],
+    lTextX: 2602, lTextY: 309.95, lRingCx: 2600, lRingCy: 273, lRingInnerR: 100, lRingOuterR: 195,
+    rTextX: 3046, rTextY: 313.95, rRingCx: 3046, rRingCy: 314, rRingR: 150, dialTextPx: 140, dialTextMaxW: 240,
+    ledCx: 3393.76, ledCy: [135.82, 353.82], ledW: 124, ledH: 106,
+    parLabelX: 3540.65, parLabelY: [133.61, 355.65], parValX: 3751.71, parValY: [216.82, 438.86], parValMaxW: 500,
+    bub: [131.4, 605.6, 3833.3, 1368.8],
+  };
+  const COL = { grey: '#b2b2b2', gold: '#c4a105', cyan: '#08b8ff', yellow: '#ffd400', blue: '#78aeff', pink: '#ff78ce' };
+  const OVERLAY = ['#3fd2c7', '#ffb648'];
+  const NFRETS = 15;
+  const DEG = ['1','b2','2','b3','3','4','b5','5','b6','6','b7','7'];
+  const $ = id => document.getElementById(id);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  // ================= engine (fret.wasm = Source/FretEngine.cpp + web/fret_wasm.cpp) =================
   let E = null;
   const read = p => new TextDecoder().decode(new Uint8Array(E.memory.buffer, p, E.fret_len()));
   const call = (fn, ...a) => JSON.parse(read(E[fn](...a)));
 
-  const st = { root: 9, scale: 1, tuning: 0, sevenths: false, degrees: false, sound: true,
-               sel: -1, gripIdx: [] , meta: null, scaleInfo: null, chords: [] };
-  try { Object.assign(st, JSON.parse(localStorage.getItem('fretweb') || '{}'), { sel: -1, gripIdx: [] }); } catch (e) {}
-  const save = () => { try { localStorage.setItem('fretweb', JSON.stringify({ root: st.root, scale: st.scale, tuning: st.tuning, sevenths: st.sevenths, degrees: st.degrees, sound: st.sound })); } catch (e) {} };
+  const st = { root: 9, scale: 1, tuning: 0, pos: -1, sevenths: false, degrees: false, sound: true,
+               overlays: [{ on: false, scale: 2 }, { on: false, scale: 5 }],
+               sel: -1, gripIdx: [], meta: null, scaleInfo: null, ovInfo: [null, null], chords: [] };
+  try { const s = JSON.parse(localStorage.getItem('fretweb3') || '{}'); for (const k of ['root','scale','tuning','pos','sevenths','degrees','sound','overlays']) if (k in s) st[k] = s[k]; } catch (e) {}
+  const save = () => { try { localStorage.setItem('fretweb3', JSON.stringify({ root: st.root, scale: st.scale, tuning: st.tuning, pos: st.pos, sevenths: st.sevenths, degrees: st.degrees, sound: st.sound, overlays: st.overlays })); } catch (e) {} };
 
-  const $ = id => document.getElementById(id);
-  const SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  const DEG = ['1','b2','2','b3','3','4','b5','5','b6','6','b7','7'];
-  const NFRETS = 15;
-  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  // ================= images =================
+  const img = src => new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+  const IMG = {};
+  const FRAMES = { left: { n: 24, w: 301, h: 194 }, right: { n: 25, w: 332, h: 200 } };
 
-  // ---------- sound: Karplus-Strong, same recipe as Source/PluckSynth.h ----------
+  // ================= sound: Karplus-Strong, same recipe as Source/PluckSynth.h =================
   let ctx = null, master = null, live = [], unlockEl = null;
-  // iOS mutes Web Audio while the ring/silent switch is on. Declaring a playback session and
-  // looping a silent <audio> element (started inside the tap) moves the page to the media
-  // channel, which ignores the switch.
-  function silentWav() {
+  function silentWav() {   // iOS/iPadOS: a looping silent <audio> moves the page off the ringer channel
     const n = 2000, b = new Uint8Array(44 + n), v = new DataView(b.buffer), w = (o, s) => [...s].forEach((c, i) => b[o + i] = c.charCodeAt(0));
     w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
     v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); w(36, 'data'); v.setUint32(40, n, true);
-    b.fill(128, 44);
-    let s = ''; b.forEach(x => s += String.fromCharCode(x)); return 'data:audio/wav;base64,' + btoa(s);
-  }
-  function unlockIOS() {
-    if (unlockEl) return;
-    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
-    try { unlockEl = new Audio(silentWav()); unlockEl.loop = true; unlockEl.setAttribute('playsinline', ''); unlockEl.play().catch(() => {}); } catch (e) {}
+    b.fill(128, 44); let s = ''; b.forEach(x => s += String.fromCharCode(x)); return 'data:audio/wav;base64,' + btoa(s);
   }
   function audio() {
-    unlockIOS();
+    if (!unlockEl) {
+      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+      try { unlockEl = new Audio(silentWav()); unlockEl.loop = true; unlockEl.setAttribute('playsinline', ''); unlockEl.play().catch(() => {}); } catch (e) {}
+    }
     if (!ctx) {
       ctx = new (window.AudioContext || window.webkitAudioContext)();
       master = ctx.createGain(); master.gain.value = 0.5;
       const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
     }
     if (ctx.state === 'suspended') ctx.resume();
-    return ctx;
   }
   const cache = new Map();
   function pluckBuffer(midi) {
@@ -188,171 +157,336 @@ select:focus-visible, .tog:focus-visible, .card:focus-visible, .step:focus-visib
       buf[pos] = ap * decay; if (++pos >= N) pos = 0;
       out[i] = x * 0.6;
     }
-    for (let i = 0; i < 256; i++) out[len - 1 - i] *= i / 256;   // click-free tail
+    for (let i = 0; i < 256; i++) out[len - 1 - i] *= i / 256;
     const ab = ctx.createBuffer(1, len, sr); ab.copyToChannel(out, 0);
     cache.set(midi, ab); return ab;
   }
-  function damp() {
-    const t = ctx.currentTime;
-    for (const g of live) { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, 0.03); }
-    live = [];
-  }
-  function play(midi, when = 0, vel = 0.8) {
+  function play(midi, when, vel) {
     const src = ctx.createBufferSource(); src.buffer = pluckBuffer(midi);
-    const g = ctx.createGain(); g.gain.value = vel;
-    src.connect(g); g.connect(master); src.start(ctx.currentTime + when);
+    const g = ctx.createGain(); g.gain.value = vel; src.connect(g); g.connect(master); src.start(ctx.currentTime + when);
     live.push(g); src.onended = () => { live = live.filter(x => x !== g); };
   }
-  function pluck(midi) { if (!st.sound) return; audio(); play(midi); }
-  function strum(notes) { if (!st.sound || !notes.length) return; audio(); damp(); notes.forEach((m, i) => play(m, 0.005 + i * 0.028, 0.75)); }
+  function pluck(midi) { if (!st.sound) return; audio(); play(midi, 0, 0.8); }
+  function strum(notes) {
+    if (!st.sound || !notes.length) return; audio();
+    const t = ctx.currentTime; for (const g of live) { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, 0.03); } live = [];
+    notes.forEach((m, i) => play(m, 0.005 + i * 0.028, 0.75));
+  }
 
-  // ---------- data ----------
-  function refresh() {
+  // ================= data =================
+  const openMidi = () => st.meta.tunings[st.tuning].open;
+  const names = () => st.scaleInfo.names;
+  const inWindow = (g, pos) => pos === 0 ? g.base <= 2 : Math.abs(g.base - pos) <= 2;   // gripInWindow()
+  function refresh(keepSel) {
     st.scaleInfo = call('fret_scale', st.root, st.scale);
-    st.chords = call('fret_chords', st.root, st.scale, st.sevenths ? 1 : 0, st.tuning, 12);
-    if (st.gripIdx.length !== st.chords.length) st.gripIdx = st.chords.map(() => 0);
-    if (st.sel >= st.chords.length) st.sel = -1;
-    save(); renderCards(); drawBoard();
-    const t = st.meta.tunings[st.tuning];
-    $('status').innerHTML = `<b>${st.scaleInfo.names[st.root]} ${st.meta.scales[st.scale]}</b> \u00b7 ${t.name} tuning \u00b7 ${st.chords.length} chords`;
+    st.ovInfo = st.overlays.map(o => o.on ? call('fret_scale', st.root, o.scale) : null);
+    st.chords = call('fret_chords', st.root, st.scale, st.sevenths ? 1 : 0, st.tuning, 16);
+    // pickGripIdx(): best shape inside the position window, else the overall best
+    st.gripIdx = st.chords.map(c => { if (st.pos >= 0) { const k = c.grips.findIndex(g => inWindow(g, st.pos)); if (k >= 0) return k; } return 0; });
+    if (!keepSel || st.sel >= st.chords.length) st.sel = -1;
+    save(); syncHits(); drawChrome(); drawNeck(); renderStrip(); resetMarquee();
+    $('status').textContent = `${names()[st.root]} ${st.meta.scales[st.scale]} · ${st.meta.tunings[st.tuning].name} · engine: LilacFret FretEngine (WebAssembly)`;
   }
   const curGrip = i => { const c = st.chords[i]; return c && c.grips[st.gripIdx[i]] || null; };
-  const openMidi = () => st.meta.tunings[st.tuning].open;
   const gripNotes = g => g.frets.map((f, s) => f < 0 ? null : openMidi()[s] + f).filter(n => n !== null);
-  const nameOf = pc => st.scaleInfo ? st.scaleInfo.names[((pc % 12) + 12) % 12] : SHARP[pc];
 
-  // ---------- neck ----------
-  const board = $('board');
-  const geo = () => {
-    const w = board.clientWidth, h = board.clientHeight, n = openMidi().length;
-    const left = 46, right = 14, top = 26, bottom = 26;
-    return { w, h, n, left, top, fw: (w - left - right) / (NFRETS + 0.6), sh: (h - top - bottom) / (n - 1) };
-  };
-  const fretX = (G, f) => G.left + G.fw * (f + 0.6);                          // fret wire f
-  const noteX = (G, f) => f === 0 ? G.left - 18 : fretX(G, f) - G.fw / 2;       // where you press
-  const strY  = (G, s) => G.top + G.sh * (G.n - 1 - s);                          // low string at the bottom
-
-  function drawBoard() {
-    const dpr = window.devicePixelRatio || 1, G = geo();
-    board.width = Math.round(G.w * dpr); board.height = Math.round(G.h * dpr);
-    const g = board.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, G.w, G.h);
-    const end = fretX(G, NFRETS);
-    g.fillStyle = css('--wood'); g.fillRect(G.left, G.top - 12, end - G.left, G.sh * (G.n - 1) + 24);
-    g.fillStyle = css('--line');
-    [3,5,7,9,15].forEach(f => { g.beginPath(); g.arc(noteX(G, f), G.top + G.sh * (G.n - 1) / 2, 5, 0, 7); g.fill(); });
-    [[12, -1], [12, 1]].forEach(([f, d]) => { g.beginPath(); g.arc(noteX(G, f), G.top + G.sh * (G.n - 1) / 2 + d * G.sh, 5, 0, 7); g.fill(); });
-    for (let f = 1; f <= NFRETS; f++) {
-      g.strokeStyle = css('--line'); g.lineWidth = 2;
-      g.beginPath(); g.moveTo(fretX(G, f), G.top - 12); g.lineTo(fretX(G, f), G.top + G.sh * (G.n - 1) + 12); g.stroke();
-      g.fillStyle = css('--mut'); g.font = '12px Barlow, sans-serif'; g.textAlign = 'center';
-      g.fillText(f, noteX(G, f), G.h - 6);
-    }
-    g.fillStyle = css('--fg'); g.fillRect(fretX(G, 0) - 3, G.top - 12, 4, G.sh * (G.n - 1) + 24);   // nut
-    for (let s = 0; s < G.n; s++) {
-      g.strokeStyle = '#8c8299'; g.lineWidth = 1 + (G.n - 1 - s) * 0.25;
-      g.beginPath(); g.moveTo(G.left - 30, strY(G, s)); g.lineTo(end, strY(G, s)); g.stroke();
-    }
-    const grip = st.sel >= 0 ? curGrip(st.sel) : null;
-    const { mask, standout } = st.scaleInfo;
-    const r = Math.min(12, G.sh * 0.42);
-    for (let s = 0; s < G.n; s++) for (let f = 0; f <= NFRETS; f++) {
-      const midi = openMidi()[s] + f, pc = midi % 12;
-      const inGrip = grip && grip.frets[s] === f;
-      if (!((mask >> pc) & 1) && !inGrip) continue;
-      const x = noteX(G, f), y = strY(G, s);
-      const col = inGrip ? css('--pink') : pc === st.root ? css('--root') : ((standout >> pc) & 1) ? css('--gold') : css('--lilac');
-      g.globalAlpha = grip && !inGrip ? 0.28 : 1;
-      g.fillStyle = col; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
-      g.fillStyle = css('--dot-text'); g.font = `600 ${Math.round(r * 0.95)}px Barlow, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.fillText(st.degrees ? DEG[(pc - st.root + 12) % 12] : nameOf(pc), x, y + 1);
-      g.globalAlpha = 1; g.textBaseline = 'alphabetic';
-    }
-    if (grip) grip.frets.forEach((f, s) => { if (f < 0) { g.fillStyle = css('--mut'); g.font = '14px Barlow, sans-serif'; g.textAlign = 'center'; g.fillText('\u00d7', G.left - 18, strY(G, s) + 5); } });
+  // ================= stage sizing =================
+  const stage = $('stage'), chrome = $('chrome');
+  let S = 1;   // CSS px per canvas unit
+  function layout() {
+    const w = stage.clientWidth; S = w / V.W;
+    document.querySelectorAll('[data-r]').forEach(el => {
+      const [x, y, rw, rh] = el.dataset.r.split(',').map(Number);
+      Object.assign(el.style, { left: x * S + 'px', top: y * S + 'px', width: rw * S + 'px', height: rh * S + 'px' });
+    });
+    // bubble interior: plugin's resized() — reduced (56, 36), neck flex 1.55 : bottom 1
+    const [bx, by, bw, bh] = V.bub, rx = 56 * S, ry = 36 * S, gap = Math.max(6, 26 * S);
+    const bub = $('bubble');
+    Object.assign(bub.style, { left: (bx * S + rx) + 'px', top: (by * S + ry) + 'px', width: (bw * S - 2 * rx) + 'px', height: (bh * S - 2 * ry) + 'px', gap: gap + 'px' });
+    const inner = bh * S - 2 * ry - gap;
+    $('neck').style.height = Math.round(inner * 1.55 / 2.55) + 'px';
+    $('chordsPanel').style.height = Math.round(inner / 2.55) + 'px';
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    chrome.width = Math.round(w * dpr); chrome.height = Math.round(w * V.H / V.W * dpr);
   }
-  board.addEventListener('click', e => {
-    const b = board.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top, G = geo();
-    const s = Math.max(0, Math.min(G.n - 1, G.n - 1 - Math.round((y - G.top) / G.sh)));
-    let f; if (x < fretX(G, 0)) f = 0; else f = Math.min(NFRETS, Math.max(1, Math.ceil((x - fretX(G, 0)) / G.fw)));
-    const midi = openMidi()[s] + f;
-    if ((st.scaleInfo.mask >> (midi % 12)) & 1) pluck(midi);
-  });
 
-  // ---------- chord cards ----------
-  function drawDiagram(cv, chord, grip) {
-    const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
-    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
-    const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
-    if (!grip) { g.fillStyle = css('--mut'); g.font = '13px Barlow'; g.fillText('no playable shape', 8, h / 2); return; }
-    const n = grip.frets.length, maxF = Math.max(...grip.frets);
-    const open = maxF <= 4, start = open ? 1 : grip.base;
-    const L = 18, R = w - 34, T = 22, B = h - 8, cw = (R - L) / (n - 1), rh = (B - T) / 4;
-    g.strokeStyle = css('--line'); g.lineWidth = 1;
-    for (let s = 0; s < n; s++) { g.beginPath(); g.moveTo(L + s * cw, T); g.lineTo(L + s * cw, B); g.stroke(); }
-    for (let k = 0; k <= 4; k++) { g.beginPath(); g.moveTo(L, T + k * rh); g.lineTo(R, T + k * rh); g.stroke(); }
-    if (open) { g.fillStyle = css('--fg'); g.fillRect(L - 1, T - 3, R - L + 2, 4); }
-    else {   // fret number ABOVE-RIGHT of the grid, clear of every dot (the plugin bug noted in session_notes)
-      g.fillStyle = css('--mut'); g.font = '15px "Jersey 15", monospace'; g.textAlign = 'left'; g.fillText(start + 'fr', R + 6, T + rh * 0.5 + 5);
+  // ================= chrome: matrix under bg, bg, dials, screen text, parallel =================
+  const font10 = px => `${px}px "Jersey 10", monospace`;
+  function text(g, t, ax, ay, px, col, just, maxW) {   // v3Text(): baseline-anchored, shrink to fit
+    g.font = font10(px); let w = g.measureText(t).width;
+    if (maxW && w > maxW) { px *= maxW / w; g.font = font10(px); w = g.measureText(t).width; }
+    g.fillStyle = col; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    g.fillText(t, just < 0 ? ax : just > 0 ? ax - w : ax - w / 2, ay);
+  }
+  let mq = { offset: 0, textW: 0, holdUntil: 0, raf: 0, last: 0 };
+  function resetMarquee() { mq.offset = 0; mq.holdUntil = performance.now() + 1600; if (!mq.raf) mq.raf = requestAnimationFrame(tick); }
+  function tick(t) {
+    mq.raf = 0;
+    const field = V.mqRight - V.mqX - 2 * V.mqPad;
+    if (mq.textW > field) {
+      if (t > mq.holdUntil) { mq.offset += Math.min(50, t - (mq.last || t)) * 0.28; if (mq.offset > mq.textW + V.mqWrapGap) { mq.offset = 0; mq.holdUntil = t + 1600; } }
+      mq.last = t; drawChrome(); mq.raf = requestAnimationFrame(tick);
     }
-    const dr = Math.min(9, cw * 0.4, rh * 0.4);
-    if (grip.barre) {
-      const y = T + rh * (grip.barreFret - start + 0.5);
-      g.fillStyle = css('--lilac'); g.globalAlpha = .55;
-      g.beginPath(); g.roundRect(L + grip.barreFrom * cw - dr, y - dr * .7, (n - 1 - grip.barreFrom) * cw + 2 * dr, dr * 1.4, dr); g.fill(); g.globalAlpha = 1;
+  }
+  function drawMatrix(g) {
+    const rootStr = names()[st.root] + ' ', scaleStr = st.meta.scales[st.scale];
+    g.font = font10(V.mqFontPx);
+    const rootW = g.measureText(rootStr).width, total = rootW + g.measureText(scaleStr).width; mq.textW = total;
+    const fieldW = V.mqRight - V.mqX;
+    g.save(); g.beginPath(); g.rect(V.mqX, V.mqClipY, fieldW, V.mqClipH); g.clip();
+    const run = x => { g.fillStyle = COL.cyan; g.fillText(rootStr, x, V.mqBaseline); g.fillStyle = COL.yellow; g.fillText(scaleStr, x + rootW, V.mqBaseline); };
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    if (total <= fieldW - 2 * V.mqPad) run(V.mqX + (fieldW - total) / 2);
+    else { const x = V.mqX + V.mqPad - mq.offset; run(x); run(x + total + V.mqWrapGap); }
+    g.restore();
+  }
+  function frame(g, sheet, info, idx, rect) {
+    if (!sheet) return; idx = Math.max(0, Math.min(info.n - 1, idx));
+    g.drawImage(sheet, idx * info.w, 0, info.w, info.h, rect[0], rect[1], rect[2], rect[3]);
+  }
+  function drawChrome() {
+    if (!st.meta) return;
+    const g = chrome.getContext('2d'), k = chrome.width / V.W;
+    g.setTransform(k, 0, 0, k, 0, 0); g.imageSmoothingQuality = 'high';
+    g.fillStyle = '#000'; g.fillRect(0, 0, V.W, V.H);
+    drawMatrix(g);
+    if (IMG.bg) g.drawImage(IMG.bg, 0, 0, V.W, V.H);
+    // dials (ring frames sit under the text). Root: frames 00000..00023 are at (i+1)*15 deg, so pc -> 2pc-1, C -> 23
+    frame(g, IMG.dl, FRAMES.left, st.root === 0 ? 23 : 2 * st.root - 1, V.lDial);
+    const posK = st.pos < 0 ? 0 : st.pos + 1;
+    frame(g, IMG.dr, FRAMES.right, Math.round(posK * (FRAMES.right.n - 1) / 17), V.rDial);
+    text(g, names()[st.root], V.lTextX, V.lTextY, V.dialTextPx, COL.blue, 0, V.dialTextMaxW);
+    if (st.pos <= 0) text(g, st.pos < 0 ? 'ANY' : 'OPEN', V.rTextX, V.rTextY - 16, 84, COL.pink, 0, 190);
+    else {
+      const f = st.pos, num = String(f), suf = (f % 100 >= 11 && f % 100 <= 13) ? 'TH' : f % 10 === 1 ? 'ST' : f % 10 === 2 ? 'ND' : f % 10 === 3 ? 'RD' : 'TH';
+      g.font = font10(V.dialTextPx); const wn = g.measureText(num).width; g.font = font10(78); const ws = g.measureText(suf).width;
+      const x0 = V.rTextX - (wn + ws) / 2; g.fillStyle = COL.pink; g.textAlign = 'left';
+      g.font = font10(V.dialTextPx); g.fillText(num, x0, V.rTextY); g.font = font10(78); g.fillText(suf, x0 + wn, V.rTextY - 37);
     }
-    grip.frets.forEach((f, s) => {
-      const x = L + s * cw;
-      g.textAlign = 'center'; g.font = '13px Barlow, sans-serif';
-      if (f < 0) { g.fillStyle = css('--mut'); g.fillText('\u00d7', x, T - 8); return; }
-      if (f === 0) { g.strokeStyle = css('--mut'); g.beginPath(); g.arc(x, T - 12, 4, 0, 7); g.stroke(); return; }
-      const pc = (openMidi()[s] + f) % 12, y = T + rh * (f - start + 0.5);
-      g.fillStyle = pc === chord.root ? css('--root') : css('--lilac');
-      g.beginPath(); g.arc(x, y, dr, 0, 7); g.fill();
+    // screen
+    text(g, 'Scale', V.scaleLabelX, V.scaleLabelY, 56, COL.grey, +1);
+    text(g, st.meta.scales[st.scale], V.scaleValX, V.scaleValY, 109, COL.gold, +1, V.screenValMaxW);
+    text(g, 'Tuning', V.tunLabelX, V.tunLabelY, 56, COL.grey, -1);
+    text(g, st.meta.tunings[st.tuning].name, V.tunValX, V.tunValY, 109, COL.grey, -1, V.screenValMaxW);
+    // parallel slots
+    for (let i = 0; i < 2; i++) {
+      const o = st.overlays[i];
+      if (o.on && IMG.par) g.drawImage(IMG.par, V.ledCx - V.ledW / 2, V.ledCy[i] - V.ledH / 2, V.ledW, V.ledH);
+      text(g, 'Parallel', V.parLabelX, V.parLabelY[i], 56, COL.grey, -1);
+      text(g, st.meta.scales[o.scale], V.parValX, V.parValY[i], 109, o.on ? OVERLAY[i] : COL.grey, 0, V.parValMaxW);
+    }
+  }
+
+  // ---- dials: drag (vertical), wheel, tap ring (root: clock position) ----
+  const canvasPt = e => { const b = chrome.getBoundingClientRect(); return { x: (e.clientX - b.left) / S, y: (e.clientY - b.top) / S }; };
+  const dialAt = p => {
+    if (Math.hypot(p.x - V.lRingCx, p.y - V.lRingCy) <= V.lRingOuterR) return 1;
+    if (Math.hypot(p.x - V.rRingCx, p.y - V.rRingCy) <= V.rRingR) return 2;
+    return 0;
+  };
+  const setRoot = pc => { pc = ((pc % 12) + 12) % 12; if (pc !== st.root) { st.root = pc; refresh(false); } };
+  const setPosK = k => { k = Math.max(0, Math.min(NFRETS + 1, k)); const pf = k === 0 ? -1 : k - 1; if (pf !== st.pos) { st.pos = pf; refresh(true); } };
+  let drag = null;
+  chrome.addEventListener('pointerdown', e => {
+    const p = canvasPt(e), d = dialAt(p); if (!d) return;
+    drag = { d, y0: p.y, v0: d === 1 ? st.root : (st.pos < 0 ? 0 : st.pos + 1), moved: false, p };
+    chrome.setPointerCapture(e.pointerId);
+  });
+  chrome.addEventListener('pointermove', e => {
+    if (!drag) return; const p = canvasPt(e);
+    if (Math.abs(p.y - drag.y0) > 12) drag.moved = true;
+    if (!drag.moved) return;
+    const steps = Math.round((drag.y0 - p.y) / 30);
+    drag.d === 1 ? setRoot(drag.v0 + steps) : setPosK(drag.v0 + steps);
+  });
+  chrome.addEventListener('pointerup', e => {
+    if (!drag) return; const d = drag; drag = null;
+    if (d.moved) return;
+    if (d.d === 1) { const dx = d.p.x - V.lRingCx, dy = d.p.y - V.lRingCy; setRoot(Math.round(Math.atan2(dx, -dy) * 180 / Math.PI / 30)); }
+    else setPosK((st.pos < 0 ? 0 : st.pos + 1) + 1);
+  });
+  stage.addEventListener('wheel', e => {
+    const d = dialAt(canvasPt(e)); if (!d || !e.deltaY) return; e.preventDefault();
+    const step = e.deltaY < 0 ? 1 : -1;
+    d === 1 ? setRoot(st.root + step) : setPosK((st.pos < 0 ? 0 : st.pos + 1) + step);
+  }, { passive: false });
+
+  // ---- hit-zone selects/buttons ----
+  const opts = (sel, items, val) => { sel.innerHTML = items.map((t, i) => `<option value="${i}">${t}</option>`).join(''); sel.value = String(val); };
+  function syncHits() {
+    $('scaleSel').value = st.scale; $('tuningSel').value = st.tuning; $('rootSel').value = st.root;
+    $('posSel').value = st.pos < 0 ? 0 : st.pos + 1;
+    $('par0Sel').value = st.overlays[0].scale; $('par1Sel').value = st.overlays[1].scale;
+    opts($('rootSel'), names(), st.root);
+  }
+  function wire() {
+    opts($('scaleSel'), st.meta.scales, st.scale);
+    opts($('tuningSel'), st.meta.tunings.map(t => t.name), st.tuning);
+    opts($('posSel'), ['Any', 'Open'].concat([...Array(NFRETS)].map((_, i) => 'Fret ' + (i + 1))), st.pos < 0 ? 0 : st.pos + 1);
+    opts($('par0Sel'), st.meta.scales, st.overlays[0].scale); opts($('par1Sel'), st.meta.scales, st.overlays[1].scale);
+    $('scaleSel').onchange  = e => { st.scale = +e.target.value; refresh(false); };
+    $('tuningSel').onchange = e => { st.tuning = +e.target.value; refresh(true); };
+    $('rootSel').onchange   = e => setRoot(+e.target.value);
+    $('posSel').onchange    = e => setPosK(+e.target.value);
+    [0, 1].forEach(i => {
+      $('par' + i).onclick = () => { st.overlays[i].on = !st.overlays[i].on; refresh(true); };
+      $('par' + i + 'Sel').onchange = e => { st.overlays[i].scale = +e.target.value; st.overlays[i].on = true; refresh(true); };
+    });
+    for (const k of ['degrees', 'sevenths', 'sound']) {
+      const b = $(k); b.setAttribute('aria-pressed', String(st[k]));
+      b.onclick = () => { st[k] = !st[k]; b.setAttribute('aria-pressed', String(st[k])); k === 'sevenths' ? refresh(false) : (save(), drawNeck()); };
+    }
+    let t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => { layout(); drawChrome(); drawNeck(); renderStrip(); }, 60); });
+  }
+
+  // ================= neck: FretboardComponent::paint() =================
+  const neck = $('neck');
+  const NK = { left: 78, right: 12, top: 16, bottom: 44 };
+  function neckGeo() {
+    const w = neck.clientWidth, h = neck.clientHeight, n = openMidi().length;
+    const bw = w - NK.left - NK.right, bh = h - NK.top - NK.bottom;
+    const wire = i => { const phys = (1 - Math.pow(2, -i / 12)) / (1 - Math.pow(2, -NFRETS / 12)); return NK.left + bw * (0.55 * phys + 0.45 * i / NFRETS); };
+    const noteX = f => f === 0 ? NK.left - 26 : 0.5 * (wire(f - 1) + wire(f));
+    const strY = s => NK.top + bh * (n - 1 - s) / (n - 1);
+    return { w, h, n, bw, bh, wire, noteX, strY };
+  }
+  function layers() {
+    const L = [{ col: css('--lilac'), mask: st.scaleInfo.mask, standout: st.scaleInfo.standout, primary: true }];
+    st.overlays.forEach((o, i) => { if (o.on && st.ovInfo[i]) L.push({ col: OVERLAY[i], mask: st.ovInfo[i].mask, standout: st.ovInfo[i].standout, primary: false }); });
+    return L;
+  }
+  function drawNeck() {
+    if (!st.meta) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1), G = neckGeo();
+    neck.width = Math.round(G.w * dpr); neck.height = Math.round(G.h * dpr);
+    const g = neck.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, G.w, G.h);
+    const { bw, bh, wire, noteX, strY, n } = G, left = NK.left, top = NK.top;
+    if (bw < 50 || bh < 40) return;
+    g.fillStyle = css('--board'); g.beginPath(); g.roundRect(left - 6, top - 8, bw + 12, bh + 16, 10); g.fill();
+    if (IMG.flower) {   // flower intarsia, centred on fret 2, faint + pixelated
+      const fh = bh * 0.82, fw = fh * IMG.flower.width / IMG.flower.height;
+      g.save(); g.globalAlpha = 0.08; g.imageSmoothingEnabled = false; g.drawImage(IMG.flower, noteX(2) - fw / 2, top + (bh - fh) / 2, fw, fh); g.restore();
+    }
+    if (st.pos >= 0) {   // position window band
+      const lo = st.pos === 0 ? 0 : Math.max(1, st.pos - 2), hi = st.pos === 0 ? 3 : Math.min(NFRETS, st.pos + 2);
+      const x0 = lo === 0 ? left - 44 : wire(lo - 1), x1 = wire(Math.min(hi, NFRETS));
+      g.fillStyle = 'rgba(177,140,255,.10)'; g.strokeStyle = 'rgba(177,140,255,.35)'; g.lineWidth = 1;
+      g.beginPath(); g.roundRect(x0, top - 10, x1 - x0, bh + 20, 5); g.fill(); g.stroke();
+    }
+    g.fillStyle = 'rgba(255,255,255,.05)';
+    for (const f of [3, 5, 7, 9, 15]) { g.beginPath(); g.arc(noteX(f), top + bh / 2, 5, 0, 7); g.fill(); }
+    for (const y of [0.3, 0.7]) { g.beginPath(); g.arc(noteX(12), top + bh * y, 5, 0, 7); g.fill(); }
+    g.strokeStyle = css('--wire');
+    for (let f = 1; f <= NFRETS; f++) { g.lineWidth = f === 12 ? 2.4 : 1.3; g.beginPath(); g.moveTo(wire(f), top - 6); g.lineTo(wire(f), top + bh + 6); g.stroke(); }
+    g.fillStyle = css('--nut'); g.beginPath(); g.roundRect(left - 4, top - 8, 4, bh + 16, 1.5); g.fill();
+    g.fillStyle = css('--dim'); g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = `${Math.max(13, Math.min(22, bh * 0.06))}px "Jersey 15", monospace`;
+    for (const f of [3, 5, 7, 9, 12, 15]) g.fillText(f, noteX(f), top + bh + 29);
+    g.strokeStyle = css('--strings');
+    for (let s = 0; s < n; s++) { g.lineWidth = 1 + 2.2 * (n - 1 - s) / (n - 1); g.beginPath(); g.moveTo(left - 3, strY(s)); g.lineTo(left + bw, strY(s)); g.stroke(); }
+    g.fillStyle = css('--mut'); g.font = `${Math.max(14, Math.min(23, bh / n * 0.5))}px "Jersey 15", monospace`;
+    for (let s = 0; s < n; s++) g.fillText(names()[openMidi()[s] % 12], 16, strY(s));
+
+    const grip = st.sel >= 0 ? curGrip(st.sel) : null;
+    const dim = grip ? 0.26 : 1, dotR = Math.min(13, bh / n * 0.44);
+    const L = layers();
+    const glyph = (t, x, y, r) => { g.fillStyle = css('--dot-text'); g.font = `${r * 1.45}px "Jersey 10", monospace`; g.fillText(t, x, y + 1); };
+    for (let s = 0; s < n; s++) for (let f = 0; f <= NFRETS; f++) {
+      const pc = (openMidi()[s] + f) % 12, members = L.filter(l => (l.mask >> pc) & 1);
+      if (!members.length) continue;
+      const isRoot = pc === st.root, overlayOnly = members.length === 1 && !members[0].primary;
+      const r = (!isRoot && overlayOnly) ? dotR * 0.74 : dotR, x = noteX(f), y = strY(s);
+      g.globalAlpha = dim;
+      if (isRoot) { g.fillStyle = css('--root'); g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); g.strokeStyle = 'rgba(255,255,255,.92)'; g.lineWidth = 1.8; g.beginPath(); g.arc(x, y, r + 1.6, 0, 7); g.stroke(); }
+      else if (members.length === 1) { g.fillStyle = members[0].col; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+      else { const seg = Math.PI * 2 / members.length; members.forEach((m, i) => { g.fillStyle = m.col; g.beginPath(); g.moveTo(x, y); g.arc(x, y, r, -Math.PI / 2 + i * seg, -Math.PI / 2 + (i + 1) * seg); g.closePath(); g.fill(); }); }
+      if (!isRoot && members.some(m => (m.standout >> pc) & 1)) { g.strokeStyle = css('--gold'); g.lineWidth = 3; g.beginPath(); g.arc(x, y, r + 1.5, 0, 7); g.stroke(); }
+      g.globalAlpha = 1;
+      if (!grip && (isRoot || !overlayOnly)) glyph(st.degrees ? DEG[(pc - st.root + 12) % 12] : names()[pc], x, y, r);
+    }
+    if (grip) grip.frets.forEach((f, s) => {
+      const y = strY(s);
+      if (f < 0) { g.fillStyle = css('--rose'); g.font = `${dotR * 1.4}px "Jersey 15", monospace`; g.fillText('x', noteX(0), y); return; }
+      const x = noteX(f), pc = (openMidi()[s] + f) % 12;
+      g.fillStyle = pc === st.root ? css('--root') : css('--lilac'); g.beginPath(); g.arc(x, y, dotR - 1, 0, 7); g.fill();
+      g.strokeStyle = '#fff'; g.lineWidth = 2.2; g.beginPath(); g.arc(x, y, dotR + 1, 0, 7); g.stroke();
+      glyph(names()[pc], x, y, dotR);
     });
   }
-  function renderCards() {
-    const box = $('cards'); box.textContent = '';
+  neck.addEventListener('click', e => {
+    const b = neck.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top, G = neckGeo();
+    let f = -1;
+    if (x < NK.left) f = 0; else for (let i = 1; i <= NFRETS; i++) if (x <= G.wire(i)) { f = i; break; }
+    if (f < 0) return;
+    const s = Math.max(0, Math.min(G.n - 1, G.n - 1 - Math.round((y - NK.top) * (G.n - 1) / G.bh)));
+    const midi = openMidi()[s] + f, near = Math.abs(y - G.strY(s)) < Math.max(14, G.bh / G.n * 0.5);
+    if (near && layers().some(l => (l.mask >> (midi % 12)) & 1)) { pluck(midi); return; }
+    st.pos = st.pos === f ? -1 : f; refresh(true);   // empty spot: set / clear the position window
+  });
+
+  // ================= chord strip: ChordDiagram =================
+  function drawDiagram(cv, chord, grip, title) {
+    const dpr = Math.min(2, window.devicePixelRatio || 1), w = cv.clientWidth, h = cv.clientHeight;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+    g.textBaseline = 'alphabetic';
+    // title: roman (lilac) + name
+    g.font = `${Math.max(14, Math.min(22, h * 0.11))}px "Jersey 15", monospace`; g.fillStyle = css('--lilac'); g.textAlign = 'left';
+    g.fillText(chord.roman, 10, 22); const rw = g.measureText(chord.roman + '  ').width;
+    g.fillStyle = css('--fg'); g.font = `600 ${Math.max(12, Math.min(16, h * 0.085))}px Barlow, sans-serif`; g.fillText(chord.name, 10 + rw, 22);
+    if (!grip) { g.fillStyle = css('--mut'); g.font = '12px Barlow'; g.fillText('no shape', 10, h / 2); return; }
+    const n = grip.frets.length, open = Math.max(...grip.frets) <= 4, start = open ? 1 : grip.base;
+    const L = w * 0.12, R = w * (open ? 0.88 : 0.78), T = 30 + 16, B = h - 8, cw = (R - L) / (n - 1), rh = (B - T) / 4;
+    g.strokeStyle = css('--hair'); g.lineWidth = 1;
+    for (let s = 0; s < n; s++) { g.beginPath(); g.moveTo(L + s * cw, T); g.lineTo(L + s * cw, B); g.stroke(); }
+    for (let k = 0; k <= 4; k++) { g.beginPath(); g.moveTo(L, T + k * rh); g.lineTo(R, T + k * rh); g.stroke(); }
+    if (open) { g.fillStyle = css('--nut'); g.fillRect(L - 1, T - 3, R - L + 2, 4); }
+    else { g.fillStyle = '#cfc8dc'; g.font = '14px "Jersey 15", monospace'; g.textAlign = 'left'; g.fillText(start + 'fr', R + 6, T + rh * 0.5 + 5); }
+    const dr = Math.min(9, cw * 0.44, rh * 0.44);
+    if (grip.barre) {
+      const y = T + rh * (grip.barreFret - start + 0.5);
+      g.fillStyle = 'rgba(177,140,255,.5)'; g.beginPath(); g.roundRect(L + grip.barreFrom * cw - 6, y - 6, (n - 1 - grip.barreFrom) * cw + 12, 12, 6); g.fill();
+    }
+    g.textAlign = 'center';
+    grip.frets.forEach((f, s) => {
+      const x = L + s * cw;
+      if (f < 0) { g.fillStyle = css('--rose'); g.font = '13px "Jersey 15", monospace'; g.fillText('x', x, T - 6); return; }
+      if (f === 0) { g.strokeStyle = css('--mut'); g.lineWidth = 1.2; g.beginPath(); g.arc(x, T - 10, 3.5, 0, 7); g.stroke(); return; }
+      const pc = (openMidi()[s] + f) % 12, y = T + rh * (f - start + 0.5);
+      g.fillStyle = pc === chord.root ? css('--root') : css('--lilac'); g.beginPath(); g.arc(x, y, dr, 0, 7); g.fill();
+    });
+  }
+  function renderStrip() {
+    const box = $('strip'); box.textContent = '';
+    const h = box.clientHeight - 14, cardW = Math.max(96, Math.min(190, h * 0.78));
     st.chords.forEach((c, i) => {
       const card = document.createElement('div'); card.className = 'card' + (i === st.sel ? ' sel' : ''); card.tabIndex = 0;
-      card.setAttribute('role', 'button'); card.setAttribute('aria-label', `${c.roman} ${c.name}`);
-      card.innerHTML = `<div class="name"><span class="roman">${c.roman}</span><span class="cn">${c.name}</span></div><canvas></canvas>
-        <div class="nav"><button class="step" aria-label="Previous fretting">\u2039</button><span></span><button class="step" aria-label="Next fretting">\u203a</button></div>`;
+      card.style.width = cardW + 'px'; card.setAttribute('role', 'button'); card.setAttribute('aria-label', `${c.roman} ${c.name}`);
+      card.innerHTML = `<canvas></canvas><div class="nav"><button class="step" aria-label="Previous fretting">‹</button><span></span><button class="step" aria-label="Next fretting">›</button></div>`;
       const [prev, next] = card.querySelectorAll('.step'), lbl = card.querySelector('.nav span');
-      const upd = () => { lbl.textContent = c.grips.length ? `${st.gripIdx[i] + 1} / ${c.grips.length}` : '\u2013'; prev.disabled = st.gripIdx[i] <= 0; next.disabled = st.gripIdx[i] >= c.grips.length - 1; drawDiagram(card.querySelector('canvas'), c, curGrip(i)); };
-      const choose = () => { st.sel = i; document.querySelectorAll('.card').forEach((el, k) => el.classList.toggle('sel', k === i)); drawBoard(); const gr = curGrip(i); if (gr) strum(gripNotes(gr)); };
+      const upd = () => { lbl.textContent = c.grips.length ? `${st.gripIdx[i] + 1}/${c.grips.length}` : '–'; prev.disabled = st.gripIdx[i] <= 0; next.disabled = st.gripIdx[i] >= c.grips.length - 1; drawDiagram(card.querySelector('canvas'), c, curGrip(i)); };
+      const choose = () => { st.sel = i; box.querySelectorAll('.card').forEach((el, k) => el.classList.toggle('sel', k === i)); drawNeck(); const gr = curGrip(i); if (gr) strum(gripNotes(gr)); };
       prev.onclick = e => { e.stopPropagation(); st.gripIdx[i]--; upd(); choose(); };
       next.onclick = e => { e.stopPropagation(); st.gripIdx[i]++; upd(); choose(); };
-      card.onclick = choose;
-      card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(); } };
+      card.onclick = choose; card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(); } };
       box.appendChild(card); upd();
     });
   }
 
-  // ---------- controls ----------
-  function fill(sel, items, val) { sel.innerHTML = items.map((t, i) => `<option value="${i}">${t}</option>`).join(''); sel.value = val; }
-  function wire() {
-    fill($('root'), SHARP, st.root); fill($('scale'), st.meta.scales, st.scale); fill($('tuning'), st.meta.tunings.map(t => t.name), st.tuning);
-    $('root').onchange   = e => { st.root = +e.target.value; st.sel = -1; refresh(); };
-    $('scale').onchange  = e => { st.scale = +e.target.value; st.sel = -1; refresh(); };
-    $('tuning').onchange = e => { st.tuning = +e.target.value; st.gripIdx = []; refresh(); };
-    for (const k of ['sevenths', 'degrees', 'sound']) {
-      const b = $(k); b.setAttribute('aria-pressed', String(st[k]));
-      b.onclick = () => { st[k] = !st[k]; b.setAttribute('aria-pressed', String(st[k])); if (k === 'sevenths') { st.gripIdx = []; refresh(); } else { save(); drawBoard(); } };
-    }
-    let t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => { drawBoard(); renderCards(); }, 80); });
-  }
-
-  // reactor-model WASI module: no file or clock use, so every import can be a no-op
-  const stub = new Proxy({}, { get: () => () => 0 });
-  fetch('fret.wasm').then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
-    .then(b => WebAssembly.instantiate(b, { wasi_snapshot_preview1: stub }))
-    .then(({ instance }) => {
-      E = instance.exports; if (E._initialize) E._initialize();
-      st.meta = call('fret_meta');
-      st.scale = Math.min(st.scale, st.meta.scales.length - 1); st.tuning = Math.min(st.tuning, st.meta.tunings.length - 1);
-      wire(); refresh();
-      document.fonts && document.fonts.ready.then(() => { drawBoard(); renderCards(); });
-    })
-    .catch(err => { $('status').textContent = 'The engine could not load (' + err.message + '). Reload the page to try again.'; });
+  // ================= boot =================
+  const stub = new Proxy({}, { get: () => () => 0 });   // reactor WASI module: no file/clock use
+  Promise.all([
+    fetch('fret.wasm').then(r => { if (!r.ok) throw new Error('fret.wasm HTTP ' + r.status); return r.arrayBuffer(); }).then(b => WebAssembly.instantiate(b, { wasi_snapshot_preview1: stub })),
+    img('assets/bg.webp').then(i => IMG.bg = i), img('assets/dial_left.webp').then(i => IMG.dl = i), img('assets/dial_right.webp').then(i => IMG.dr = i),
+    img('assets/parallel_on.png').then(i => IMG.par = i), img('assets/flower.png').then(i => IMG.flower = i),
+  ]).then(([{ instance }]) => {
+    E = instance.exports; if (E._initialize) E._initialize();
+    st.meta = call('fret_meta');
+    st.scale = Math.min(st.scale, st.meta.scales.length - 1); st.tuning = Math.min(st.tuning, st.meta.tunings.length - 1);
+    st.overlays.forEach(o => o.scale = Math.min(o.scale, st.meta.scales.length - 1));
+    layout(); wire(); refresh(false);
+    if (document.fonts) document.fonts.ready.then(() => { drawChrome(); drawNeck(); renderStrip(); });
+  }).catch(err => { $('status').textContent = 'Could not load (' + err.message + '). Reload the page to try again.'; });
 })();
 </script>
 
