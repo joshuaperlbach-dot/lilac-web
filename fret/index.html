@@ -8,47 +8,60 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Jersey+15&family=Barlow:wght@400;600&display=swap">
 <style>
 /* Layout: the plugin's V3 art skin. A 4096x2160 stage (baked background, dial frame
-   sequences, LED matrix) scaled to the window; the live neck and chord strip sit in the
-   bubble rect exactly where the plugin puts them. Single dark look, like the plugin. */
+   sequences, LED matrix) scaled to the window; the live neck, CHORDS and PROGRESSION
+   panels sit in the bubble rect where the plugin puts them. Single dark look, like the plugin. */
 @font-face { font-family: "Jersey 10"; src: url(assets/Jersey10-Regular.ttf) format("truetype"); font-display: swap; }
 @font-face { font-family: "Jersey 15"; src: url(assets/Jersey15-Regular.ttf) format("truetype"); font-display: swap; }
 @font-face { font-family: "Barlow"; src: url(assets/Barlow-Regular.ttf) format("truetype"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "Barlow"; src: url(assets/Barlow-SemiBold.ttf) format("truetype"); font-weight: 600; font-display: swap; }
 :root {
   color-scheme: dark;
-  --bg: #0b0910;  --panel: #1b1626; --panel-brd: #2a2438; --board: #221c2e;
+  --bg: #0b0910;  --panel: #1b1626; --panel-brd: #2a2438; --board: #221c2e; --card: #151020;
   --fg: #e8e4f0;  --mut: #8a8496;   --dim: #6e6880;
-  --lilac: #b18cff; --root: #4cc3e8; --gold: #ffd166; --rose: #ff6f91;
-  --teal: #3fd2c7; --amber: #ffb648; --dot-text: #17141d;
+  --lilac: #b18cff; --root: #4cc3e8; --gold: #ffd166; --rose: #ff6f91; --quality: #f2b63c; --ext: #e75fa8;
+  --teal: #3fd2c7; --green: #7dff9a; --red: #ff5f5f; --dot-text: #17141d;
   --nut: #d6cfe6; --strings: #746d88; --wire: #453f58; --hair: #3a3450;
 }
 html, body { background: var(--bg); color: var(--fg); margin: 0; }
 body { font-family: "Barlow", "Helvetica Neue", Arial, sans-serif;
-       padding-left: max(0px, env(safe-area-inset-left, 0px)); padding-right: max(0px, env(safe-area-inset-right, 0px)); }
+       padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
 .scroller { overflow-x: auto; }
-#stage { position: relative; width: max(100%, 980px); aspect-ratio: 4096 / 2160; margin: 0 auto; user-select: none; -webkit-user-select: none; }
+#stage { position: relative; width: max(100%, 980px); aspect-ratio: 4096 / 2160; margin: 0 auto; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 #chrome { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
-.hit { position: absolute; opacity: 0; cursor: pointer; font-size: 16px; appearance: none; border: 0; background: none; }
-select.hit { -webkit-appearance: none; }
+.hit { position: absolute; opacity: 0; cursor: pointer; font-size: 16px; appearance: none; -webkit-appearance: none; border: 0; background: none; }
 .hit:focus-visible { opacity: .25; outline: 2px solid var(--lilac); }
+#error { position: absolute; inset: 40% 20% auto; text-align: center; color: var(--fg); background: var(--panel); border: 1px solid var(--panel-brd); border-radius: 10px; padding: 14px; }
 
 #bubble { position: absolute; display: flex; flex-direction: column; }
 #neck { display: block; width: 100%; touch-action: manipulation; cursor: pointer; }
-.panel { background: var(--panel); border: 1px solid var(--panel-brd); border-radius: 10px; display: flex; flex-direction: column; min-height: 0; }
-.head { display: flex; align-items: center; gap: 6px; padding: 8px 10px 4px; min-width: 0; }
-.head h2 { font: 600 13px/1 "Barlow", sans-serif; color: #e8e4f0; margin: 0; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.head h2 span { color: var(--mut); font-weight: 400; }
-.pill { font: 500 12px/1 "Barlow", sans-serif; color: var(--mut); background: #221c30; border: 1px solid var(--panel-brd); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
-.pill[aria-pressed="true"] { background: var(--lilac); color: var(--dot-text); border-color: var(--lilac); }
-.pill:focus-visible, .card:focus-visible { outline: 2px solid var(--lilac); outline-offset: 2px; }
-.strip { flex: 1; min-height: 0; overflow-x: auto; overflow-y: hidden; display: flex; gap: 8px; padding: 4px 10px 10px; }
-.card { flex: 0 0 auto; background: #151020; border: 1px solid var(--panel-brd); border-radius: 12px; display: flex; flex-direction: column; cursor: pointer; position: relative; }
+#bottom { display: flex; min-height: 0; }
+.panel { background: var(--panel); border: 1px solid var(--panel-brd); border-radius: 10px; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+#chordsPanel { flex: 56 1 0; } #progPanel { flex: 44 1 0; }
+.head { display: flex; align-items: center; gap: 5px; padding: 7px 9px 3px; min-width: 0; overflow-x: auto; scrollbar-width: none; white-space: nowrap; }
+.head::-webkit-scrollbar { display: none; }
+.title { font: 600 13px/1.2 "Barlow", sans-serif; color: var(--fg); flex: 1 1 auto; min-width: 60px; overflow: hidden; text-overflow: ellipsis; }
+.title span { color: var(--mut); font-weight: 400; }
+.live { font: 15px/1 "Jersey 15", monospace; color: #e5d9ff; }
+.pill { font: 500 12px/1 "Barlow", sans-serif; color: var(--mut); background: #221c30; border: 1px solid var(--panel-brd); border-radius: 999px; padding: 5px 10px; cursor: pointer; flex: 0 0 auto; }
+.pill[aria-pressed="true"], .pill.on { background: var(--lilac); color: var(--dot-text); border-color: var(--lilac); }
+.pill:disabled { opacity: .35; cursor: default; }
+select.pill { padding-right: 22px; appearance: none; -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--mut) 50%), linear-gradient(135deg, var(--mut) 50%, transparent 50%);
+  background-position: calc(100% - 12px) 52%, calc(100% - 8px) 52%; background-size: 4px 4px; background-repeat: no-repeat; max-width: 170px; }
+.rank { font: 12px/1 "Barlow", sans-serif; color: var(--mut); font-variant-numeric: tabular-nums; }
+.pill:focus-visible, .card:focus-visible, .mini:focus-visible { outline: 2px solid var(--lilac); outline-offset: 2px; }
+input.name { font: 13px "Barlow", sans-serif; color: var(--fg); background: var(--card); border: 1px solid var(--lilac); border-radius: 6px; padding: 4px 8px; width: 150px; }
+.strip { flex: 1; min-height: 0; overflow-x: auto; overflow-y: hidden; display: flex; gap: 7px; padding: 4px 9px 9px; align-items: stretch; position: relative; }
+.empty { color: var(--dim); font-size: 13px; align-self: center; padding: 0 6px; white-space: normal; }
+.card { flex: 0 0 auto; background: var(--card); border: 1px solid var(--panel-brd); border-radius: 12px; display: flex; flex-direction: column; cursor: pointer; position: relative; touch-action: pan-x; }
 .card.sel { border-color: var(--lilac); box-shadow: 0 0 0 1px var(--lilac) inset; }
+.card.playing { border-color: var(--root); box-shadow: 0 0 0 1px var(--root) inset; }
+.card.dragging { opacity: .85; z-index: 2; box-shadow: 0 6px 18px rgba(0,0,0,.5); }
 .card canvas { display: block; flex: 1; min-height: 0; width: 100%; }
-.card .nav { display: flex; justify-content: space-between; align-items: center; padding: 0 6px 6px; font: 12px/1 "Barlow", sans-serif; color: var(--mut); font-variant-numeric: tabular-nums; }
-.step { font: 14px/1 "Barlow", sans-serif; background: none; border: 1px solid var(--panel-brd); color: var(--fg); border-radius: 6px; width: 24px; height: 20px; cursor: pointer; padding: 0; }
-.step:disabled { opacity: .3; cursor: default; }
-#status { color: var(--dim); font-size: 12px; text-align: center; padding: 8px 16px 16px; margin: 0; }
+.mini { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--panel-brd); background: #221c30; color: var(--fg); font: 600 14px/1 "Barlow", sans-serif; padding: 0; cursor: pointer; display: grid; place-items: center; }
+.mini.add { color: var(--lilac); }
+.info { flex: 1 1 auto; min-width: 160px; font-size: 13px; line-height: 1.45; color: #cfc8dc; white-space: normal; align-self: flex-start; padding-top: 4px; }
+.info b { color: var(--fg); font-weight: 600; } .info .out { color: var(--rose); } .info .ok { color: var(--green); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -57,9 +70,9 @@ select.hit { -webkit-appearance: none; }
     <canvas id="chrome"></canvas>
 
     <!-- invisible hit zones over the baked chrome (same rects as the plugin's resized()) -->
-    <select class="hit" id="scaleSel"  aria-label="Scale"   data-r="1600,88,715,190"></select>
-    <select class="hit" id="tuningSel" aria-label="Tuning"  data-r="1600,282,715,190"></select>
-    <select class="hit" id="rootSel"   aria-label="Root"    data-r="2530,203,140,140"></select>
+    <select class="hit" id="scaleSel"  aria-label="Scale"    data-r="1600,88,715,190"></select>
+    <select class="hit" id="tuningSel" aria-label="Tuning"   data-r="1600,282,715,190"></select>
+    <select class="hit" id="rootSel"   aria-label="Root"     data-r="2530,203,140,140"></select>
     <select class="hit" id="posSel"    aria-label="Position" data-r="2976,244,140,140"></select>
     <button class="hit" id="par0" aria-label="Parallel scale 1 on/off" data-r="3324,66,140,140"></button>
     <button class="hit" id="par1" aria-label="Parallel scale 2 on/off" data-r="3324,284,140,140"></button>
@@ -68,52 +81,83 @@ select.hit { -webkit-appearance: none; }
 
     <div id="bubble">
       <canvas id="neck" aria-label="Fretboard"></canvas>
-      <div class="panel" id="chordsPanel">
-        <div class="head">
-          <h2 id="chordsHead">Chords in this scale <span>&middot; tap to hear, arrows for other frettings</span></h2>
-          <button class="pill" id="degrees" aria-pressed="false">Degrees</button>
-          <button class="pill" id="sevenths" aria-pressed="false">7ths</button>
-          <button class="pill" id="sound" aria-pressed="true">Sound</button>
+      <div id="bottom">
+        <div class="panel" id="chordsPanel">
+          <div class="head" id="chordsHead"></div>
+          <div class="strip" id="chordStrip"></div>
         </div>
-        <div class="strip" id="strip"></div>
+        <div class="panel" id="progPanel">
+          <div class="head" id="progHead"></div>
+          <div class="strip" id="progStrip"></div>
+        </div>
       </div>
     </div>
+    <div id="error" hidden></div>
   </div>
 </div>
-<p id="status">Loading engine&hellip;</p>
 
 <script>
 (() => {
-  // ================= V3 layout: numbers straight from Source/PluginEditor.cpp (namespace v3) ==========
+  // ================= V3 layout: numbers straight from Source/PluginEditor.cpp (namespace v3) =================
   const V = {
     W: 4096, H: 2160,
     mqX: 100, mqRight: 1520, mqBaseline: 400, mqFontPx: 505, mqClipY: 60, mqClipH: 420, mqPad: 14, mqWrapGap: 320,
     scaleLabelX: 2253.47, scaleLabelY: 154.61, scaleValX: 2254.89, scaleValY: 237.82,
     tunLabelX: 1668.47, tunLabelY: 331.61, tunValX: 1669.89, tunValY: 414.82, screenValMaxW: 620,
     lDial: [2203.01, 81.03, 602, 389], rDial: [2845.4, 79.23, 664, 401],
-    lTextX: 2602, lTextY: 309.95, lRingCx: 2600, lRingCy: 273, lRingInnerR: 100, lRingOuterR: 195,
+    lTextX: 2602, lTextY: 309.95, lRingCx: 2600, lRingCy: 273, lRingOuterR: 195,
     rTextX: 3046, rTextY: 313.95, rRingCx: 3046, rRingCy: 314, rRingR: 150, dialTextPx: 140, dialTextMaxW: 240,
     ledCx: 3393.76, ledCy: [135.82, 353.82], ledW: 124, ledH: 106,
     parLabelX: 3540.65, parLabelY: [133.61, 355.65], parValX: 3751.71, parValY: [216.82, 438.86], parValMaxW: 500,
     bub: [131.4, 605.6, 3833.3, 1368.8],
   };
   const COL = { grey: '#b2b2b2', gold: '#c4a105', cyan: '#08b8ff', yellow: '#ffd400', blue: '#78aeff', pink: '#ff78ce' };
-  const OVERLAY = ['#3fd2c7', '#ffb648'];
-  const NFRETS = 15;
+  // Parallel slot colours. Slot 2 is rose (the plugin's third overlay colour) instead of amber:
+  // amber read the same as the gold scale name on the screen.
+  const OVERLAY = ['#3fd2c7', '#ff6f91'];
+  const FLAVOURS = ['triad', '7', '9', '6', 'sus2', 'sus4'];
+  const NFRETS = 15, MAX_STEPS = 16;
   const DEG = ['1','b2','2','b3','3','4','b5','5','b6','6','b7','7'];
   const $ = id => document.getElementById(id);
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-  // ================= engine (fret.wasm = Source/FretEngine.cpp + web/fret_wasm.cpp) =================
+  // ================= engine (fret.wasm = Source/FretEngine.cpp + PitchTracker.h + web/fret_wasm.cpp) =================
   let E = null;
   const read = p => new TextDecoder().decode(new Uint8Array(E.memory.buffer, p, E.fret_len()));
   const call = (fn, ...a) => JSON.parse(read(E[fn](...a)));
 
-  const st = { root: 9, scale: 1, tuning: 0, pos: -1, sevenths: false, degrees: false, sound: true,
-               overlays: [{ on: false, scale: 2 }, { on: false, scale: 5 }],
-               sel: -1, gripIdx: [], meta: null, scaleInfo: null, ovInfo: [null, null], chords: [] };
-  try { const s = JSON.parse(localStorage.getItem('fretweb3') || '{}'); for (const k of ['root','scale','tuning','pos','sevenths','degrees','sound','overlays']) if (k in s) st[k] = s[k]; } catch (e) {}
-  const save = () => { try { localStorage.setItem('fretweb3', JSON.stringify({ root: st.root, scale: st.scale, tuning: st.tuning, pos: st.pos, sevenths: st.sevenths, degrees: st.degrees, sound: st.sound, overlays: st.overlays })); } catch (e) {} };
+  // ================= state (FretViewState) =================
+  const st = {
+    root: 9, scale: 1, tuning: 0, pos: -1, sevenths: false, degrees: false, sound: true,
+    overlays: [{ on: false, scale: 2 }, { on: false, scale: 5 }],
+    degreeFlavour: Array(12).fill(-1), chosenGrips: {},
+    progression: [], progRank: 0, libName: '',
+    customMode: false, customFrets: [],
+    // transient
+    selChord: -1, selGrip: -1, progShown: -1, progEdit: -1, playing: -1,
+    meta: null, scaleInfo: null, ovInfo: [null, null], chords: [], grips: [], prog: null,
+  };
+  const PERSIST = ['root','scale','tuning','pos','sevenths','degrees','sound','overlays','degreeFlavour','chosenGrips','progression','progRank','libName','customMode','customFrets'];
+  try { const s = JSON.parse(localStorage.getItem('fretweb4') || '{}'); for (const k of PERSIST) if (k in s) st[k] = s[k]; } catch (e) {}
+  const save = () => { try { const o = {}; for (const k of PERSIST) o[k] = st[k]; localStorage.setItem('fretweb4', JSON.stringify(o)); } catch (e) {} };
+
+  // ================= library: factory presets (Lilac's chord presets) + saved progressions =================
+  // Steps: {k:0, deg, flav} diatonic | {k:1, off, mask} literal chord (root offset from key, offset mask)
+  //        | {k:2, frets} custom shape. Any step may carry lock:[frets].
+  const T = (deg) => ({ k: 0, deg, flav: 0 }), S7 = (deg) => ({ k: 0, deg, flav: 1 });
+  const DOM7 = off => ({ k: 1, off, mask: (1 << 0) | (1 << 4) | (1 << 7) | (1 << 10) });   // literal secondary dominant
+  const FACTORY = [
+    { name: 'Autumn Leaves',      root: 7, scale: 1, steps: [S7(3), S7(6), S7(2), S7(5), S7(1), DOM7(7), S7(0)] },
+    { name: 'Fly Me to the Moon', root: 0, scale: 0, steps: [S7(5), S7(1), S7(4), S7(0), S7(3), S7(6), DOM7(4), S7(5)] },
+    { name: 'Blue Bossa',         root: 0, scale: 1, steps: [S7(0), S7(3), S7(1), DOM7(7), S7(0)] },
+    { name: 'Four Chords (Axis)', root: 0, scale: 0, steps: [T(0), T(4), T(5), T(3)] },
+    { name: '50s Doo-Wop',        root: 0, scale: 0, steps: [T(0), T(5), T(3), T(4)] },
+    { name: 'Pachelbel Canon',    root: 0, scale: 0, steps: [T(0), T(4), T(5), T(2), T(3), T(0), T(3), T(4)] },
+  ];
+  const loadLib = () => { try { const v = JSON.parse(localStorage.getItem('fretweb-library') || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
+  const saveLib = lib => { try { localStorage.setItem('fretweb-library', JSON.stringify(lib)); } catch (e) {} };
+  let saving = false;   // inline "save as" field open
 
   // ================= images =================
   const img = src => new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
@@ -130,7 +174,7 @@ select.hit { -webkit-appearance: none; }
   }
   function audio() {
     if (!unlockEl) {
-      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+      try { if (navigator.audioSession && navigator.audioSession.type !== 'play-and-record') navigator.audioSession.type = 'playback'; } catch (e) {}
       try { unlockEl = new Audio(silentWav()); unlockEl.loop = true; unlockEl.setAttribute('playsinline', ''); unlockEl.play().catch(() => {}); } catch (e) {}
     }
     if (!ctx) {
@@ -173,22 +217,67 @@ select.hit { -webkit-appearance: none; }
     notes.forEach((m, i) => play(m, 0.005 + i * 0.028, 0.75));
   }
 
-  // ================= data =================
+  // ================= derived data (refreshAll) =================
   const openMidi = () => st.meta.tunings[st.tuning].open;
+  const nStr = () => openMidi().length;
   const names = () => st.scaleInfo.names;
+  const nm = pc => names()[((pc % 12) + 12) % 12];
   const inWindow = (g, pos) => pos === 0 ? g.base <= 2 : Math.abs(g.base - pos) <= 2;   // gripInWindow()
-  function refresh(keepSel) {
+  const flavourOf = d => st.degreeFlavour[d] >= 0 ? st.degreeFlavour[d] : (st.sevenths ? 1 : 0);
+  const gripKey = c => c.name + '|' + st.tuning;
+  const sameFrets = (a, b) => a && b && a.length === b.length && a.every((v, i) => v === b[i]);
+  const gripNotes = g => g.frets.map((f, s) => f < 0 ? null : openMidi()[s] + f).filter(n => n !== null);
+  function pickGripIdx(c) {   // saved pick, then best shape in the position window, then best overall
+    const ch = st.chosenGrips[gripKey(c)];
+    if (ch) { const k = c.grips.findIndex(g => sameFrets(g.frets, ch)); if (k >= 0) return k; }
+    if (st.pos >= 0) { const k = c.grips.findIndex(g => inWindow(g, st.pos)); if (k >= 0) return k; }
+    return 0;
+  }
+  function solveProg() {
+    st.prog = null;
+    const nDeg = st.chords.length;
+    st.progression = st.progression.filter(p => p.k !== 0 || p.deg < nDeg);   // degree gone after a scale change
+    if (!st.progression.length) return;
+    const ib = new Int32Array(E.memory.buffer, E.fret_inbuf(), 4096);
+    st.progression.forEach((p, i) => {
+      const o = i * 20; ib.fill(-1, o, o + 20);
+      ib[o] = p.k; ib[o + 1] = p.k === 0 ? p.deg : p.k === 1 ? p.off : 0; ib[o + 2] = p.k === 0 ? p.flav : p.k === 1 ? p.mask : 0;
+      if (p.lock) for (let s = 0; s < 8; s++) ib[o + 4 + s] = s < p.lock.length ? p.lock[s] : -1; else ib[o + 4] = -9;
+      if (p.k === 2) for (let s = 0; s < 8; s++) ib[o + 12 + s] = s < p.frets.length ? p.frets[s] : -1;
+    });
+    const r = call('fret_progression', st.progression.length, st.root, st.scale, st.tuning, st.pos);
+    r.steps.forEach((s, i) => { if (st.progression[i].lock && s.lock < 0) delete st.progression[i].lock; });   // stale lock
+    st.progRank = Math.max(0, Math.min(r.solutions.length - 1, st.progRank));
+    st.prog = r;
+  }
+  const progGrip = i => { const p = st.prog; if (!p || !p.solutions.length) return null; return p.steps[i].grips[p.solutions[st.progRank].idx[i]]; };
+
+  function selectedGripFrets() {   // what the neck spotlights (plugin's selectedGripFrets())
+    if (!st.customMode && st.progEdit >= 0) { const g = progGrip(st.progEdit); return g ? g.frets : null; }
+    if (st.customMode) return st.customFrets.some(f => f >= 0) ? st.customFrets : null;
+    if (st.playing >= 0) { const g = progGrip(st.playing); return g ? g.frets : null; }
+    if (st.progShown >= 0) { const g = progGrip(st.progShown); return g ? g.frets : null; }
+    if (st.selChord >= 0 && st.selGrip >= 0 && st.grips[st.selGrip]) return st.grips[st.selGrip].frets;
+    return null;
+  }
+
+  function refresh() {
     st.scaleInfo = call('fret_scale', st.root, st.scale);
     st.ovInfo = st.overlays.map(o => o.on ? call('fret_scale', st.root, o.scale) : null);
-    st.chords = call('fret_chords', st.root, st.scale, st.sevenths ? 1 : 0, st.tuning, 16);
-    // pickGripIdx(): best shape inside the position window, else the overall best
-    st.gripIdx = st.chords.map(c => { if (st.pos >= 0) { const k = c.grips.findIndex(g => inWindow(g, st.pos)); if (k >= 0) return k; } return 0; });
-    if (!keepSel || st.sel >= st.chords.length) st.sel = -1;
-    save(); syncHits(); drawChrome(); drawNeck(); renderStrip(); resetMarquee();
-    $('status').textContent = `${names()[st.root]} ${st.meta.scales[st.scale]} · ${st.meta.tunings[st.tuning].name} · engine: LilacFret FretEngine (WebAssembly)`;
+    const nDeg = call('fret_chords', st.root, st.scale, 0, st.tuning, 0).length;
+    st.chords = [...Array(nDeg)].map((_, d) => call('fret_chord', st.root, st.scale, d, flavourOf(d), st.tuning, 24));
+    if (st.selChord >= nDeg) { st.selChord = -1; st.selGrip = -1; }
+    if (st.customFrets.length !== nStr()) st.customFrets = Array(nStr()).fill(-1);
+    solveProg();
+    if (st.progEdit >= st.progression.length) st.progEdit = -1;
+    if (st.progShown >= st.progression.length) st.progShown = -1;
+    // grips list for the variants view / chooser
+    if (st.progEdit >= 0 && st.prog) st.grips = orderByWindow(st.prog.steps[st.progEdit].grips);
+    else if (st.selChord >= 0) st.grips = orderByWindow(st.chords[st.selChord].grips);
+    else st.grips = [];
+    save(); syncHits(); drawChrome(); drawNeck(); renderChords(); renderProg(); resetMarquee();
   }
-  const curGrip = i => { const c = st.chords[i]; return c && c.grips[st.gripIdx[i]] || null; };
-  const gripNotes = g => g.frets.map((f, s) => f < 0 ? null : openMidi()[s] + f).filter(n => n !== null);
+  const orderByWindow = gs => st.pos < 0 ? gs.slice() : gs.filter(g => inWindow(g, st.pos)).concat(gs.filter(g => !inWindow(g, st.pos)));
 
   // ================= stage sizing =================
   const stage = $('stage'), chrome = $('chrome');
@@ -199,13 +288,13 @@ select.hit { -webkit-appearance: none; }
       const [x, y, rw, rh] = el.dataset.r.split(',').map(Number);
       Object.assign(el.style, { left: x * S + 'px', top: y * S + 'px', width: rw * S + 'px', height: rh * S + 'px' });
     });
-    // bubble interior: plugin's resized() — reduced (56, 36), neck flex 1.55 : bottom 1
+    // bubble interior: plugin's resized() — reduced (56, 36), neck flex 1.55 : bottom row 1
     const [bx, by, bw, bh] = V.bub, rx = 56 * S, ry = 36 * S, gap = Math.max(6, 26 * S);
-    const bub = $('bubble');
-    Object.assign(bub.style, { left: (bx * S + rx) + 'px', top: (by * S + ry) + 'px', width: (bw * S - 2 * rx) + 'px', height: (bh * S - 2 * ry) + 'px', gap: gap + 'px' });
+    Object.assign($('bubble').style, { left: (bx * S + rx) + 'px', top: (by * S + ry) + 'px', width: (bw * S - 2 * rx) + 'px', height: (bh * S - 2 * ry) + 'px', gap: gap + 'px' });
+    $('bottom').style.gap = gap + 'px';
     const inner = bh * S - 2 * ry - gap;
     $('neck').style.height = Math.round(inner * 1.55 / 2.55) + 'px';
-    $('chordsPanel').style.height = Math.round(inner / 2.55) + 'px';
+    $('bottom').style.height = Math.round(inner / 2.55) + 'px';
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     chrome.width = Math.round(w * dpr); chrome.height = Math.round(w * V.H / V.W * dpr);
   }
@@ -218,31 +307,30 @@ select.hit { -webkit-appearance: none; }
     g.fillStyle = col; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
     g.fillText(t, just < 0 ? ax : just > 0 ? ax - w : ax - w / 2, ay);
   }
-  let mq = { offset: 0, textW: 0, holdUntil: 0, raf: 0, last: 0 };
-  function resetMarquee() { mq.offset = 0; mq.holdUntil = performance.now() + 1600; if (!mq.raf) mq.raf = requestAnimationFrame(tick); }
-  function tick(t) {
+  const mq = { offset: 0, textW: 0, holdUntil: 0, raf: 0, last: 0 };
+  function resetMarquee() { mq.offset = 0; mq.last = 0; mq.holdUntil = performance.now() + 2000; if (!mq.raf) mq.raf = requestAnimationFrame(tick); }
+  function tick(t) {   // endless ticker: hold 2 s, scroll ~180 canvas px/s, wrap, hold again
     mq.raf = 0;
-    const field = V.mqRight - V.mqX - 2 * V.mqPad;
-    if (mq.textW > field) {
-      if (t > mq.holdUntil) { mq.offset += Math.min(50, t - (mq.last || t)) * 0.28; if (mq.offset > mq.textW + V.mqWrapGap) { mq.offset = 0; mq.holdUntil = t + 1600; } }
+    if (mq.textW > V.mqRight - V.mqX - 2 * V.mqPad) {
+      if (t > mq.holdUntil) { mq.offset += Math.min(50, t - (mq.last || t)) * 0.18; if (mq.offset >= mq.textW + V.mqWrapGap) { mq.offset = 0; mq.holdUntil = t + 2000; } }
       mq.last = t; drawChrome(); mq.raf = requestAnimationFrame(tick);
     }
   }
   function drawMatrix(g) {
-    const rootStr = names()[st.root] + ' ', scaleStr = st.meta.scales[st.scale];
+    const rootStr = nm(st.root) + ' ', scaleStr = st.meta.scales[st.scale];
     g.font = font10(V.mqFontPx);
     const rootW = g.measureText(rootStr).width, total = rootW + g.measureText(scaleStr).width; mq.textW = total;
     const fieldW = V.mqRight - V.mqX;
     g.save(); g.beginPath(); g.rect(V.mqX, V.mqClipY, fieldW, V.mqClipH); g.clip();
-    const run = x => { g.fillStyle = COL.cyan; g.fillText(rootStr, x, V.mqBaseline); g.fillStyle = COL.yellow; g.fillText(scaleStr, x + rootW, V.mqBaseline); };
     g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    const run = x => { g.fillStyle = COL.cyan; g.fillText(rootStr, x, V.mqBaseline); g.fillStyle = COL.yellow; g.fillText(scaleStr, x + rootW, V.mqBaseline); };
     if (total <= fieldW - 2 * V.mqPad) run(V.mqX + (fieldW - total) / 2);
     else { const x = V.mqX + V.mqPad - mq.offset; run(x); run(x + total + V.mqWrapGap); }
     g.restore();
   }
-  function frame(g, sheet, info, idx, rect) {
+  function frame(g, sheet, info, idx, r) {
     if (!sheet) return; idx = Math.max(0, Math.min(info.n - 1, idx));
-    g.drawImage(sheet, idx * info.w, 0, info.w, info.h, rect[0], rect[1], rect[2], rect[3]);
+    g.drawImage(sheet, idx * info.w, 0, info.w, info.h, r[0], r[1], r[2], r[3]);
   }
   function drawChrome() {
     if (!st.meta) return;
@@ -255,7 +343,7 @@ select.hit { -webkit-appearance: none; }
     frame(g, IMG.dl, FRAMES.left, st.root === 0 ? 23 : 2 * st.root - 1, V.lDial);
     const posK = st.pos < 0 ? 0 : st.pos + 1;
     frame(g, IMG.dr, FRAMES.right, Math.round(posK * (FRAMES.right.n - 1) / 17), V.rDial);
-    text(g, names()[st.root], V.lTextX, V.lTextY, V.dialTextPx, COL.blue, 0, V.dialTextMaxW);
+    text(g, nm(st.root), V.lTextX, V.lTextY, V.dialTextPx, COL.blue, 0, V.dialTextMaxW);
     if (st.pos <= 0) text(g, st.pos < 0 ? 'ANY' : 'OPEN', V.rTextX, V.rTextY - 16, 84, COL.pink, 0, 190);
     else {
       const f = st.pos, num = String(f), suf = (f % 100 >= 11 && f % 100 <= 13) ? 'TH' : f % 10 === 1 ? 'ST' : f % 10 === 2 ? 'ND' : f % 10 === 3 ? 'RD' : 'TH';
@@ -263,12 +351,10 @@ select.hit { -webkit-appearance: none; }
       const x0 = V.rTextX - (wn + ws) / 2; g.fillStyle = COL.pink; g.textAlign = 'left';
       g.font = font10(V.dialTextPx); g.fillText(num, x0, V.rTextY); g.font = font10(78); g.fillText(suf, x0 + wn, V.rTextY - 37);
     }
-    // screen
     text(g, 'Scale', V.scaleLabelX, V.scaleLabelY, 56, COL.grey, +1);
     text(g, st.meta.scales[st.scale], V.scaleValX, V.scaleValY, 109, COL.gold, +1, V.screenValMaxW);
     text(g, 'Tuning', V.tunLabelX, V.tunLabelY, 56, COL.grey, -1);
     text(g, st.meta.tunings[st.tuning].name, V.tunValX, V.tunValY, 109, COL.grey, -1, V.screenValMaxW);
-    // parallel slots
     for (let i = 0; i < 2; i++) {
       const o = st.overlays[i];
       if (o.on && IMG.par) g.drawImage(IMG.par, V.ledCx - V.ledW / 2, V.ledCy[i] - V.ledH / 2, V.ledW, V.ledH);
@@ -277,15 +363,11 @@ select.hit { -webkit-appearance: none; }
     }
   }
 
-  // ---- dials: drag (vertical), wheel, tap ring (root: clock position) ----
+  // ---- dials: drag (vertical), wheel, tap ring (root: clock position; position: next) ----
   const canvasPt = e => { const b = chrome.getBoundingClientRect(); return { x: (e.clientX - b.left) / S, y: (e.clientY - b.top) / S }; };
-  const dialAt = p => {
-    if (Math.hypot(p.x - V.lRingCx, p.y - V.lRingCy) <= V.lRingOuterR) return 1;
-    if (Math.hypot(p.x - V.rRingCx, p.y - V.rRingCy) <= V.rRingR) return 2;
-    return 0;
-  };
-  const setRoot = pc => { pc = ((pc % 12) + 12) % 12; if (pc !== st.root) { st.root = pc; refresh(false); } };
-  const setPosK = k => { k = Math.max(0, Math.min(NFRETS + 1, k)); const pf = k === 0 ? -1 : k - 1; if (pf !== st.pos) { st.pos = pf; refresh(true); } };
+  const dialAt = p => Math.hypot(p.x - V.lRingCx, p.y - V.lRingCy) <= V.lRingOuterR ? 1 : Math.hypot(p.x - V.rRingCx, p.y - V.rRingCy) <= V.rRingR ? 2 : 0;
+  const setRoot = pc => { pc = ((pc % 12) + 12) % 12; if (pc !== st.root) { st.root = pc; st.selChord = st.selGrip = -1; refresh(); } };
+  const setPosK = k => { k = Math.max(0, Math.min(NFRETS + 1, k)); const pf = k === 0 ? -1 : k - 1; if (pf !== st.pos) { st.pos = pf; st.selGrip = 0; refresh(); } };
   let drag = null;
   chrome.addEventListener('pointerdown', e => {
     const p = canvasPt(e), d = dialAt(p); if (!d) return;
@@ -295,14 +377,11 @@ select.hit { -webkit-appearance: none; }
   chrome.addEventListener('pointermove', e => {
     if (!drag) return; const p = canvasPt(e);
     if (Math.abs(p.y - drag.y0) > 12) drag.moved = true;
-    if (!drag.moved) return;
-    const steps = Math.round((drag.y0 - p.y) / 30);
-    drag.d === 1 ? setRoot(drag.v0 + steps) : setPosK(drag.v0 + steps);
+    if (drag.moved) { const steps = Math.round((drag.y0 - p.y) / 30); drag.d === 1 ? setRoot(drag.v0 + steps) : setPosK(drag.v0 + steps); }
   });
-  chrome.addEventListener('pointerup', e => {
-    if (!drag) return; const d = drag; drag = null;
-    if (d.moved) return;
-    if (d.d === 1) { const dx = d.p.x - V.lRingCx, dy = d.p.y - V.lRingCy; setRoot(Math.round(Math.atan2(dx, -dy) * 180 / Math.PI / 30)); }
+  chrome.addEventListener('pointerup', () => {
+    if (!drag) return; const d = drag; drag = null; if (d.moved) return;
+    if (d.d === 1) setRoot(Math.round(Math.atan2(d.p.x - V.lRingCx, -(d.p.y - V.lRingCy)) * 180 / Math.PI / 30));
     else setPosK((st.pos < 0 ? 0 : st.pos + 1) + 1);
   });
   stage.addEventListener('wheel', e => {
@@ -311,39 +390,101 @@ select.hit { -webkit-appearance: none; }
     d === 1 ? setRoot(st.root + step) : setPosK((st.pos < 0 ? 0 : st.pos + 1) + step);
   }, { passive: false });
 
-  // ---- hit-zone selects/buttons ----
-  const opts = (sel, items, val) => { sel.innerHTML = items.map((t, i) => `<option value="${i}">${t}</option>`).join(''); sel.value = String(val); };
+  const opts = (sel, items, val) => { sel.innerHTML = items.map((t, i) => `<option value="${i}">${esc(t)}</option>`).join(''); sel.value = String(val); };
   function syncHits() {
-    $('scaleSel').value = st.scale; $('tuningSel').value = st.tuning; $('rootSel').value = st.root;
-    $('posSel').value = st.pos < 0 ? 0 : st.pos + 1;
-    $('par0Sel').value = st.overlays[0].scale; $('par1Sel').value = st.overlays[1].scale;
     opts($('rootSel'), names(), st.root);
+    $('scaleSel').value = st.scale; $('tuningSel').value = st.tuning; $('posSel').value = st.pos < 0 ? 0 : st.pos + 1;
+    $('par0Sel').value = st.overlays[0].scale; $('par1Sel').value = st.overlays[1].scale;
   }
   function wire() {
     opts($('scaleSel'), st.meta.scales, st.scale);
     opts($('tuningSel'), st.meta.tunings.map(t => t.name), st.tuning);
-    opts($('posSel'), ['Any', 'Open'].concat([...Array(NFRETS)].map((_, i) => 'Fret ' + (i + 1))), st.pos < 0 ? 0 : st.pos + 1);
+    opts($('posSel'), ['Any position', 'Open'].concat([...Array(NFRETS)].map((_, i) => 'Around fret ' + (i + 1))), st.pos < 0 ? 0 : st.pos + 1);
     opts($('par0Sel'), st.meta.scales, st.overlays[0].scale); opts($('par1Sel'), st.meta.scales, st.overlays[1].scale);
-    $('scaleSel').onchange  = e => { st.scale = +e.target.value; refresh(false); };
-    $('tuningSel').onchange = e => { st.tuning = +e.target.value; refresh(true); };
+    $('scaleSel').onchange  = e => { st.scale = +e.target.value; st.selChord = st.selGrip = -1; refresh(); };
+    $('tuningSel').onchange = e => { st.tuning = +e.target.value; st.selGrip = -1; refresh(); };
     $('rootSel').onchange   = e => setRoot(+e.target.value);
     $('posSel').onchange    = e => setPosK(+e.target.value);
     [0, 1].forEach(i => {
-      $('par' + i).onclick = () => { st.overlays[i].on = !st.overlays[i].on; refresh(true); };
-      $('par' + i + 'Sel').onchange = e => { st.overlays[i].scale = +e.target.value; st.overlays[i].on = true; refresh(true); };
+      $('par' + i).onclick = () => { st.overlays[i].on = !st.overlays[i].on; refresh(); };
+      $('par' + i + 'Sel').onchange = e => { st.overlays[i].scale = +e.target.value; st.overlays[i].on = true; refresh(); };
     });
-    for (const k of ['degrees', 'sevenths', 'sound']) {
-      const b = $(k); b.setAttribute('aria-pressed', String(st[k]));
-      b.onclick = () => { st[k] = !st[k]; b.setAttribute('aria-pressed', String(st[k])); k === 'sevenths' ? refresh(false) : (save(), drawNeck()); };
-    }
-    let t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => { layout(); drawChrome(); drawNeck(); renderStrip(); }, 60); });
+    let t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => { layout(); drawChrome(); drawNeck(); renderChords(); renderProg(); }, 60); });
   }
+
+  // ================= live input: Web MIDI (held notes, CC61/62 scale follow) + mic pitch =================
+  const held = new Set();
+  let liveMask = 0, liveRoot = -1, liveName = '', pitchNote = -1, pitchSeen = 0, midiOn = false, micOn = false;
+  function onMidi(ev) {
+    const [s, d1, d2] = ev.data, type = s & 0xf0;
+    if (type === 0x90 && d2 > 0) held.add(d1);
+    else if (type === 0x80 || (type === 0x90 && d2 === 0)) held.delete(d1);
+    else if (type === 0xb0) {
+      if (d1 === 123 || d1 === 120) held.clear();
+      else if (d1 === 61 && d2 < 12) { if (d2 !== st.root) { st.root = d2; st.selChord = st.selGrip = -1; refresh(); } return; }
+      else if (d1 === 62 && d2 < st.meta.scales.length) { if (d2 !== st.scale) { st.scale = d2; st.selChord = st.selGrip = -1; refresh(); } return; }
+      else return;
+    } else return;
+    let mask = 0, bass = 128; held.forEach(n => { mask |= 1 << (n % 12); bass = Math.min(bass, n); });
+    if (mask) { const r = call('fret_recognize', mask, bass % 12, st.root, st.tuning, 0); liveMask = mask; liveRoot = r.chord.root; liveName = r.chord.name; }
+    else { liveMask = 0; liveRoot = -1; liveName = ''; }
+    drawNeck(); updateLive();
+  }
+  async function toggleMidi() {
+    if (midiOn) { midiOn = false; held.clear(); liveMask = 0; drawNeck(); renderProg(); return; }
+    if (!navigator.requestMIDIAccess) { flash('This browser has no Web MIDI (Safari on iPad does not support it). Use Chrome or Edge on a computer.'); return; }
+    try {
+      const acc = await navigator.requestMIDIAccess();
+      const hook = () => acc.inputs.forEach(inp => inp.onmidimessage = e => midiOn && onMidi(e));
+      hook(); acc.onstatechange = hook; midiOn = true; renderProg();
+      if (!acc.inputs.size) flash('MIDI is on, but no input device is connected yet.');
+    } catch (e) { flash('MIDI access was refused.'); }
+  }
+  let micStream = null, micNode = null, micSrc = null, pitchTimer = 0;
+  async function toggleMic() {
+    if (micOn) {
+      micOn = false; clearInterval(pitchTimer); pitchNote = -1;
+      try { micNode.disconnect(); micSrc.disconnect(); micStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+      drawNeck(); renderProg(); return;
+    }
+    try {
+      try { if (navigator.audioSession) navigator.audioSession.type = 'play-and-record'; } catch (e) {}
+      audio();
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+      micSrc = ctx.createMediaStreamSource(micStream);
+      micNode = ctx.createScriptProcessor(4096, 1, 1);
+      E.fret_pitch_prepare(ctx.sampleRate);
+      micNode.onaudioprocess = ev => {   // the plugin's YIN tracker, fed in wasm
+        const x = ev.inputBuffer.getChannelData(0), pb = new Float32Array(E.memory.buffer, E.fret_pcmbuf(), 8192);
+        pb.set(x); E.fret_pitch_push(x.length);
+      };
+      const mute = ctx.createGain(); mute.gain.value = 0;
+      micSrc.connect(micNode); micNode.connect(mute); mute.connect(ctx.destination);
+      pitchTimer = setInterval(() => {   // short hold so a tracker dropout doesn't strobe
+        const hz = E.fret_pitch_hz(), now = performance.now();
+        let n = hz > 0 ? Math.max(0, Math.min(127, Math.round(69 + 12 * Math.log2(hz / 440)))) : -1;
+        if (n >= 0) { pitchSeen = now; if (n !== pitchNote) { pitchNote = n; drawNeck(); updateLive(); } }
+        else if (pitchNote >= 0 && now - pitchSeen > 350) { pitchNote = -1; drawNeck(); updateLive(); }
+      }, 50);
+      micOn = true; renderProg();
+    } catch (e) { flash('Microphone access was refused or is not available.'); }
+  }
+  function updateLive() {
+    const el = $('liveLbl'); if (!el) return;
+    if (liveMask) { el.style.color = '#e5d9ff'; el.textContent = '♪ ' + liveName; }
+    else if (pitchNote >= 0) {
+      const pc = pitchNote % 12, inKey = (st.scaleInfo.mask >> pc) & 1;
+      el.style.color = inKey ? css('--green') : css('--red'); el.textContent = nm(pc) + (Math.floor(pitchNote / 12) - 1) + (inKey ? '  in key' : '  out of key');
+    } else el.textContent = '';
+  }
+  let flashTimer = 0;
+  function flash(msg) { const el = $('progTitle'); if (!el) return; el.innerHTML = `<span>${esc(msg)}</span>`; clearTimeout(flashTimer); flashTimer = setTimeout(renderProg, 4000); }
 
   // ================= neck: FretboardComponent::paint() =================
   const neck = $('neck');
   const NK = { left: 78, right: 12, top: 16, bottom: 44 };
   function neckGeo() {
-    const w = neck.clientWidth, h = neck.clientHeight, n = openMidi().length;
+    const w = neck.clientWidth, h = neck.clientHeight, n = nStr();
     const bw = w - NK.left - NK.right, bh = h - NK.top - NK.bottom;
     const wire = i => { const phys = (1 - Math.pow(2, -i / 12)) / (1 - Math.pow(2, -NFRETS / 12)); return NK.left + bw * (0.55 * phys + 0.45 * i / NFRETS); };
     const noteX = f => f === 0 ? NK.left - 26 : 0.5 * (wire(f - 1) + wire(f));
@@ -363,11 +504,11 @@ select.hit { -webkit-appearance: none; }
     const { bw, bh, wire, noteX, strY, n } = G, left = NK.left, top = NK.top;
     if (bw < 50 || bh < 40) return;
     g.fillStyle = css('--board'); g.beginPath(); g.roundRect(left - 6, top - 8, bw + 12, bh + 16, 10); g.fill();
-    if (IMG.flower) {   // flower intarsia, centred on fret 2, faint + pixelated
+    if (IMG.flower) {
       const fh = bh * 0.82, fw = fh * IMG.flower.width / IMG.flower.height;
       g.save(); g.globalAlpha = 0.08; g.imageSmoothingEnabled = false; g.drawImage(IMG.flower, noteX(2) - fw / 2, top + (bh - fh) / 2, fw, fh); g.restore();
     }
-    if (st.pos >= 0) {   // position window band
+    if (st.pos >= 0) {
       const lo = st.pos === 0 ? 0 : Math.max(1, st.pos - 2), hi = st.pos === 0 ? 3 : Math.min(NFRETS, st.pos + 2);
       const x0 = lo === 0 ? left - 44 : wire(lo - 1), x1 = wire(Math.min(hi, NFRETS));
       g.fillStyle = 'rgba(177,140,255,.10)'; g.strokeStyle = 'rgba(177,140,255,.35)'; g.lineWidth = 1;
@@ -385,92 +526,285 @@ select.hit { -webkit-appearance: none; }
     g.strokeStyle = css('--strings');
     for (let s = 0; s < n; s++) { g.lineWidth = 1 + 2.2 * (n - 1 - s) / (n - 1); g.beginPath(); g.moveTo(left - 3, strY(s)); g.lineTo(left + bw, strY(s)); g.stroke(); }
     g.fillStyle = css('--mut'); g.font = `${Math.max(14, Math.min(23, bh / n * 0.5))}px "Jersey 15", monospace`;
-    for (let s = 0; s < n; s++) g.fillText(names()[openMidi()[s] % 12], 16, strY(s));
+    for (let s = 0; s < n; s++) g.fillText(nm(openMidi()[s]), 16, strY(s));
 
-    const grip = st.sel >= 0 ? curGrip(st.sel) : null;
-    const dim = grip ? 0.26 : 1, dotR = Math.min(13, bh / n * 0.44);
+    const grip = selectedGripFrets(), liveActive = liveMask !== 0;
+    const dim = (grip || liveActive) ? 0.26 : 1, dotR = Math.min(13, bh / n * 0.44);
     const L = layers();
     const glyph = (t, x, y, r) => { g.fillStyle = css('--dot-text'); g.font = `${r * 1.45}px "Jersey 10", monospace`; g.fillText(t, x, y + 1); };
+    const ring = (x, y, r, col, w) => { g.strokeStyle = col; g.lineWidth = w; g.beginPath(); g.arc(x, y, r, 0, 7); g.stroke(); };
+    const dot = (x, y, r, col) => { g.fillStyle = col; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); };
     for (let s = 0; s < n; s++) for (let f = 0; f <= NFRETS; f++) {
       const pc = (openMidi()[s] + f) % 12, members = L.filter(l => (l.mask >> pc) & 1);
       if (!members.length) continue;
       const isRoot = pc === st.root, overlayOnly = members.length === 1 && !members[0].primary;
       const r = (!isRoot && overlayOnly) ? dotR * 0.74 : dotR, x = noteX(f), y = strY(s);
       g.globalAlpha = dim;
-      if (isRoot) { g.fillStyle = css('--root'); g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); g.strokeStyle = 'rgba(255,255,255,.92)'; g.lineWidth = 1.8; g.beginPath(); g.arc(x, y, r + 1.6, 0, 7); g.stroke(); }
-      else if (members.length === 1) { g.fillStyle = members[0].col; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+      if (isRoot) { dot(x, y, r, css('--root')); ring(x, y, r + 1.6, 'rgba(255,255,255,.92)', 1.8); }
+      else if (members.length === 1) dot(x, y, r, members[0].col);
       else { const seg = Math.PI * 2 / members.length; members.forEach((m, i) => { g.fillStyle = m.col; g.beginPath(); g.moveTo(x, y); g.arc(x, y, r, -Math.PI / 2 + i * seg, -Math.PI / 2 + (i + 1) * seg); g.closePath(); g.fill(); }); }
-      if (!isRoot && members.some(m => (m.standout >> pc) & 1)) { g.strokeStyle = css('--gold'); g.lineWidth = 3; g.beginPath(); g.arc(x, y, r + 1.5, 0, 7); g.stroke(); }
+      if (!isRoot && members.some(m => (m.standout >> pc) & 1)) ring(x, y, r + 1.5, css('--gold'), 3);
       g.globalAlpha = 1;
-      if (!grip && (isRoot || !overlayOnly)) glyph(st.degrees ? DEG[(pc - st.root + 12) % 12] : names()[pc], x, y, r);
+      if (!grip && !liveActive && (isRoot || !overlayOnly)) glyph(st.degrees ? DEG[(pc - st.root + 12) % 12] : nm(pc), x, y, r);
     }
-    if (grip) grip.frets.forEach((f, s) => {
-      const y = strY(s);
+    if (grip) grip.forEach((f, s) => {
+      if (s >= n) return; const y = strY(s);
       if (f < 0) { g.fillStyle = css('--rose'); g.font = `${dotR * 1.4}px "Jersey 15", monospace`; g.fillText('x', noteX(0), y); return; }
       const x = noteX(f), pc = (openMidi()[s] + f) % 12;
-      g.fillStyle = pc === st.root ? css('--root') : css('--lilac'); g.beginPath(); g.arc(x, y, dotR - 1, 0, 7); g.fill();
-      g.strokeStyle = '#fff'; g.lineWidth = 2.2; g.beginPath(); g.arc(x, y, dotR + 1, 0, 7); g.stroke();
-      glyph(names()[pc], x, y, dotR);
+      dot(x, y, dotR - 1, pc === st.root ? css('--root') : css('--lilac')); ring(x, y, dotR + 1, '#fff', 2.2);
+      glyph(nm(pc), x, y, dotR);
     });
+    if (liveActive) for (let s = 0; s < n; s++) for (let f = 0; f <= NFRETS; f++) {   // live chord spotlight
+      const pc = (openMidi()[s] + f) % 12; if (!((liveMask >> pc) & 1)) continue;
+      const off = liveRoot >= 0 ? (pc - liveRoot + 12) % 12 : -1, x = noteX(f), y = strY(s);
+      const c = off === 0 ? css('--root') : (off === 3 || off === 4 || off === 7) ? css('--quality') : (off === 10 || off === 11) ? css('--ext') : css('--lilac');
+      dot(x, y, dotR - 1, c); if (off === 0) ring(x, y, dotR + 1.5, '#fff', 2);
+      glyph(off === 0 ? 'R' : off > 0 ? DEG[off] : nm(pc), x, y, dotR);
+    }
+    if (pitchNote >= 0) {   // detected guitar pitch: green in the scale, red outside
+      const pc = pitchNote % 12, c = (st.scaleInfo.mask >> pc) & 1 ? css('--green') : css('--red');
+      for (let s = 0; s < n; s++) { const f = pitchNote - openMidi()[s]; if (f < 0 || f > NFRETS) continue;
+        const x = noteX(f), y = strY(s); g.globalAlpha = .25; dot(x, y, dotR + 4, c); g.globalAlpha = 1; ring(x, y, dotR + 1.5, c, 2.4); }
+    }
   }
   neck.addEventListener('click', e => {
     const b = neck.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top, G = neckGeo();
     let f = -1;
-    if (x < NK.left) f = 0; else for (let i = 1; i <= NFRETS; i++) if (x <= G.wire(i)) { f = i; break; }
+    if (x < NK.left) f = x > NK.left - 50 ? 0 : -1; else for (let i = 1; i <= NFRETS; i++) if (x <= G.wire(i)) { f = i; break; }
     if (f < 0) return;
     const s = Math.max(0, Math.min(G.n - 1, G.n - 1 - Math.round((y - NK.top) * (G.n - 1) / G.bh)));
-    const midi = openMidi()[s] + f, near = Math.abs(y - G.strY(s)) < Math.max(14, G.bh / G.n * 0.5);
+    const midi = openMidi()[s] + f;
+    if (st.customMode) {   // custom chord: one note per string, same cell again removes it
+      st.customFrets[s] = st.customFrets[s] === f ? -1 : f;
+      if (st.customFrets[s] >= 0) pluck(midi);
+      save(); drawNeck(); renderChords(); return;
+    }
+    const near = Math.abs(y - G.strY(s)) < Math.max(14, G.bh / G.n * 0.5);
     if (near && layers().some(l => (l.mask >> (midi % 12)) & 1)) { pluck(midi); return; }
-    st.pos = st.pos === f ? -1 : f; refresh(true);   // empty spot: set / clear the position window
+    st.pos = st.pos === f ? -1 : f; st.selGrip = 0; refresh();   // empty spot: set / clear the position window
   });
 
-  // ================= chord strip: ChordDiagram =================
-  function drawDiagram(cv, chord, grip, title) {
+  // ================= diagrams (ChordDiagram) =================
+  function drawDiagram(cv, grip, rootPc, title, sub) {
     const dpr = Math.min(2, window.devicePixelRatio || 1), w = cv.clientWidth, h = cv.clientHeight;
     cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
     const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
-    g.textBaseline = 'alphabetic';
-    // title: roman (lilac) + name
-    g.font = `${Math.max(14, Math.min(22, h * 0.11))}px "Jersey 15", monospace`; g.fillStyle = css('--lilac'); g.textAlign = 'left';
-    g.fillText(chord.roman, 10, 22); const rw = g.measureText(chord.roman + '  ').width;
-    g.fillStyle = css('--fg'); g.font = `600 ${Math.max(12, Math.min(16, h * 0.085))}px Barlow, sans-serif`; g.fillText(chord.name, 10 + rw, 22);
-    if (!grip) { g.fillStyle = css('--mut'); g.font = '12px Barlow'; g.fillText('no shape', 10, h / 2); return; }
-    const n = grip.frets.length, open = Math.max(...grip.frets) <= 4, start = open ? 1 : grip.base;
-    const L = w * 0.12, R = w * (open ? 0.88 : 0.78), T = 30 + 16, B = h - 8, cw = (R - L) / (n - 1), rh = (B - T) / 4;
+    g.textBaseline = 'alphabetic'; g.textAlign = 'left';
+    let tx = 9;
+    if (sub) { g.font = `${Math.max(13, Math.min(20, h * 0.11))}px "Jersey 15", monospace`; g.fillStyle = css('--lilac'); g.fillText(sub, tx, 20); tx += g.measureText(sub + ' ').width + 2; }
+    g.fillStyle = css('--fg'); g.font = `600 ${Math.max(11, Math.min(15, h * 0.085))}px Barlow, sans-serif`;
+    let t = title; while (t.length > 1 && tx + g.measureText(t).width > w - 30) t = t.slice(0, -1); g.fillText(t === title ? t : t + '…', tx, 20);
+    if (!grip) { g.fillStyle = css('--mut'); g.font = '12px Barlow'; g.fillText('no shape', 9, h / 2); return; }
+    const fr = grip.frets, n = fr.length, maxF = Math.max(...fr), open = maxF <= 4;
+    const minF = Math.min(...fr.filter(f => f > 0).concat([99]));
+    const start = open ? 1 : (grip.base || (minF < 99 ? minF : 1));
+    const L = w * 0.13, R = w * (open ? 0.87 : 0.76), T = 44, B = h - 6, cw = (R - L) / (n - 1), rh = (B - T) / 4;
     g.strokeStyle = css('--hair'); g.lineWidth = 1;
     for (let s = 0; s < n; s++) { g.beginPath(); g.moveTo(L + s * cw, T); g.lineTo(L + s * cw, B); g.stroke(); }
     for (let k = 0; k <= 4; k++) { g.beginPath(); g.moveTo(L, T + k * rh); g.lineTo(R, T + k * rh); g.stroke(); }
     if (open) { g.fillStyle = css('--nut'); g.fillRect(L - 1, T - 3, R - L + 2, 4); }
-    else { g.fillStyle = '#cfc8dc'; g.font = '14px "Jersey 15", monospace'; g.textAlign = 'left'; g.fillText(start + 'fr', R + 6, T + rh * 0.5 + 5); }
+    else { g.fillStyle = '#cfc8dc'; g.font = '14px "Jersey 15", monospace'; g.fillText(start + 'fr', R + 5, T + rh * 0.5 + 5); }
     const dr = Math.min(9, cw * 0.44, rh * 0.44);
     if (grip.barre) {
       const y = T + rh * (grip.barreFret - start + 0.5);
       g.fillStyle = 'rgba(177,140,255,.5)'; g.beginPath(); g.roundRect(L + grip.barreFrom * cw - 6, y - 6, (n - 1 - grip.barreFrom) * cw + 12, 12, 6); g.fill();
     }
     g.textAlign = 'center';
-    grip.frets.forEach((f, s) => {
+    fr.forEach((f, s) => {
       const x = L + s * cw;
       if (f < 0) { g.fillStyle = css('--rose'); g.font = '13px "Jersey 15", monospace'; g.fillText('x', x, T - 6); return; }
       if (f === 0) { g.strokeStyle = css('--mut'); g.lineWidth = 1.2; g.beginPath(); g.arc(x, T - 10, 3.5, 0, 7); g.stroke(); return; }
+      if (f - start > 3) return;
       const pc = (openMidi()[s] + f) % 12, y = T + rh * (f - start + 0.5);
-      g.fillStyle = pc === chord.root ? css('--root') : css('--lilac'); g.beginPath(); g.arc(x, y, dr, 0, 7); g.fill();
+      g.fillStyle = pc === rootPc ? css('--root') : css('--lilac'); g.beginPath(); g.arc(x, y, dr, 0, 7); g.fill();
     });
   }
-  function renderStrip() {
-    const box = $('strip'); box.textContent = '';
-    const h = box.clientHeight - 14, cardW = Math.max(96, Math.min(190, h * 0.78));
+  function makeCard(box, { grip, root, title, sub, sel, onTap, onAdd, onRemove, locked }) {
+    const h = box.clientHeight - 13, cw = Math.max(92, Math.min(180, h * 0.8));
+    const c = document.createElement('div'); c.className = 'card' + (sel ? ' sel' : ''); c.tabIndex = 0;
+    c.style.width = cw + 'px'; c.setAttribute('role', 'button'); c.setAttribute('aria-label', (sub ? sub + ' ' : '') + title);
+    c.innerHTML = '<canvas></canvas>';
+    if (onAdd) { const b = document.createElement('button'); b.className = 'mini add'; b.textContent = '+'; b.title = 'Add to progression'; b.setAttribute('aria-label', 'Add ' + title + ' to the progression'); b.onclick = e => { e.stopPropagation(); onAdd(); }; c.appendChild(b); }
+    if (onRemove) { const b = document.createElement('button'); b.className = 'mini'; b.textContent = '×'; b.setAttribute('aria-label', 'Remove step'); b.onclick = e => { e.stopPropagation(); onRemove(); }; c.appendChild(b); }
+    if (locked) { const l = document.createElement('span'); l.textContent = '●'; l.title = 'Fretting locked'; Object.assign(l.style, { position: 'absolute', left: '8px', bottom: '4px', color: 'var(--lilac)', fontSize: '9px' }); c.appendChild(l); }
+    c.onclick = onTap; c.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTap(); } };
+    box.appendChild(c);
+    drawDiagram(c.querySelector('canvas'), grip, root, title, sub);
+    return c;
+  }
+  function pill(label, { pressed, on, disabled, onClick, title } = {}) {
+    const b = document.createElement('button'); b.className = 'pill'; b.textContent = label;
+    if (pressed !== undefined) b.setAttribute('aria-pressed', String(!!pressed));
+    if (on) b.classList.add('on'); if (disabled) b.disabled = true; if (title) b.title = title;
+    b.onclick = onClick; return b;
+  }
+
+  // ================= CHORDS panel: overview / variants / custom / progression-step chooser =================
+  function addStep(step) {
+    if (st.progression.length >= MAX_STEPS) { flash('The progression is full (16 steps).'); return; }
+    st.progression.push(step); st.progRank = 0; st.libName = ''; refresh();
+  }
+  function renderChords() {
+    const head = $('chordsHead'), box = $('chordStrip'); head.textContent = ''; box.textContent = '';
+    const title = document.createElement('div'); title.className = 'title';
+    const right = [
+      pill('Custom', { pressed: st.customMode, onClick: () => { st.customMode = !st.customMode; if (st.customMode) { st.selChord = st.selGrip = -1; st.progEdit = -1; } refresh(); } }),
+      pill('Degrees', { pressed: st.degrees, onClick: () => { st.degrees = !st.degrees; save(); drawNeck(); renderChords(); } }),
+      pill('7ths', { pressed: st.sevenths, onClick: () => { st.sevenths = !st.sevenths; st.selGrip = -1; refresh(); } }),
+      pill('Sound', { pressed: st.sound, onClick: () => { st.sound = !st.sound; save(); renderChords(); } }),
+    ];
+
+    if (st.customMode) {
+      const placed = st.customFrets.some(f => f >= 0);
+      head.append(title, pill('Clear', { disabled: !placed, onClick: () => { st.customFrets.fill(-1); save(); drawNeck(); renderChords(); } }));
+      if (placed) head.append(pill('+ progression', { onClick: () => addStep({ k: 2, frets: st.customFrets.slice(), lock: st.customFrets.slice() }) }));
+      head.append(...right);
+      if (!placed) { title.innerHTML = 'Custom chord <span>&middot; tap notes onto the neck</span>'; box.innerHTML = '<p class="empty">Tap one note per string on the neck. Fret names the chord and relates it to the scale.</p>'; return; }
+      let mask = 0, bass = -1, minF = 0;
+      st.customFrets.forEach((f, s) => { if (f < 0) return; const pc = (openMidi()[s] + f) % 12; mask |= 1 << pc; if (bass < 0) bass = pc; if (f > 0 && (!minF || f < minF)) minF = f; });
+      const r = call('fret_recognize', mask, bass, st.root, st.tuning, 0), root = r.chord.root >= 0 ? r.chord.root : bass;
+      title.innerHTML = `${esc(r.chord.name)} <span>&middot; ${esc(r.roman)} in ${esc(nm(st.root))} ${esc(st.meta.scales[st.scale])}</span>`;
+      makeCard(box, { grip: { frets: st.customFrets, base: minF || 1 }, root, title: r.chord.name, onTap: () => strum(gripNotes({ frets: st.customFrets })),
+                      onAdd: () => addStep({ k: 2, frets: st.customFrets.slice(), lock: st.customFrets.slice() }) });
+      const tones = [], outside = [];
+      for (let off = 0; off < 12; off++) { const pc = (root + off) % 12; if (!((mask >> pc) & 1)) continue; const l = off === 0 ? 'R' : DEG[off]; tones.push(l); if (!((st.scaleInfo.mask >> pc) & 1)) outside.push(`${l} (${nm(pc)})`); }
+      const fits = []; for (let i = 0; i < st.meta.scales.length && fits.length < 4; i++) { if (i === st.scale) continue; const m = scaleMask(i); if ((m & mask) === mask) fits.push(st.meta.scales[i]); }
+      const info = document.createElement('div'); info.className = 'info';
+      info.innerHTML = `<b>Tones:</b> ${tones.join('  ')}<br>${outside.length ? `<span class="out">Outside the scale: ${esc(outside.join(', '))}</span>` : '<span class="ok">All in the scale</span>'}<br><b>Also fits (same root):</b> ${fits.length ? esc(fits.join(', ')) : 'nothing else'}`;
+      box.appendChild(info); return;
+    }
+
+    if (st.progEdit >= 0 && st.prog) {   // shape chooser for one progression step
+      const step = st.prog.steps[st.progEdit], cur = progGrip(st.progEdit);
+      head.append(pill('← progression', { onClick: () => { st.progEdit = -1; refresh(); } }), title, ...right);
+      title.innerHTML = `Step ${st.progEdit + 1}: ${esc(step.name)} <span>&middot; tap a shape to lock it (the current one again unlocks)</span>`;
+      st.grips.forEach(gr => makeCard(box, { grip: gr, root: step.root, title: step.name, sel: cur && sameFrets(gr.frets, cur.frets), onTap: () => {
+        const p = st.progression[st.progEdit]; strum(gripNotes(gr));
+        if (p.lock && sameFrets(p.lock, gr.frets)) delete p.lock; else p.lock = gr.frets.slice();
+        st.progShown = st.progEdit; st.progEdit = -1; st.libName = ''; refresh();
+      } }));
+      return;
+    }
+
+    if (st.selChord >= 0) {   // variants view: flavour chips + every fretting of the chord
+      const c = st.chords[st.selChord];
+      head.append(pill('← all chords', { onClick: () => { st.selChord = st.selGrip = -1; refresh(); } }));
+      FLAVOURS.forEach((f, i) => head.append(pill(f, { pressed: flavourOf(st.selChord) === i, onClick: () => { st.degreeFlavour[st.selChord] = i; st.selGrip = 0; refresh(); } })));
+      head.append(title, ...right);
+      title.innerHTML = `${esc(c.name)} <span>&middot; ${st.grips.length} shapes</span>`;
+      st.grips.forEach((gr, i) => makeCard(box, { grip: gr, root: c.root, title: c.name, sub: c.roman, sel: i === st.selGrip,
+        onTap: () => { strum(gripNotes(gr)); st.selGrip = st.selGrip === i ? -1 : i; if (st.selGrip >= 0) st.chosenGrips[gripKey(c)] = gr.frets.slice(); save(); drawNeck(); renderChords(); },
+        onAdd: () => addStep({ k: 0, deg: st.selChord, flav: flavourOf(st.selChord), lock: gr.frets.slice() }) }));
+      return;
+    }
+
+    head.append(title, ...right);   // overview: one best grip per diatonic chord
+    title.innerHTML = 'Chords in this scale <span>&middot; tap for frettings, + adds to the progression</span>';
     st.chords.forEach((c, i) => {
-      const card = document.createElement('div'); card.className = 'card' + (i === st.sel ? ' sel' : ''); card.tabIndex = 0;
-      card.style.width = cardW + 'px'; card.setAttribute('role', 'button'); card.setAttribute('aria-label', `${c.roman} ${c.name}`);
-      card.innerHTML = `<canvas></canvas><div class="nav"><button class="step" aria-label="Previous fretting">‹</button><span></span><button class="step" aria-label="Next fretting">›</button></div>`;
-      const [prev, next] = card.querySelectorAll('.step'), lbl = card.querySelector('.nav span');
-      const upd = () => { lbl.textContent = c.grips.length ? `${st.gripIdx[i] + 1}/${c.grips.length}` : '–'; prev.disabled = st.gripIdx[i] <= 0; next.disabled = st.gripIdx[i] >= c.grips.length - 1; drawDiagram(card.querySelector('canvas'), c, curGrip(i)); };
-      const choose = () => { st.sel = i; box.querySelectorAll('.card').forEach((el, k) => el.classList.toggle('sel', k === i)); drawNeck(); const gr = curGrip(i); if (gr) strum(gripNotes(gr)); };
-      prev.onclick = e => { e.stopPropagation(); st.gripIdx[i]--; upd(); choose(); };
-      next.onclick = e => { e.stopPropagation(); st.gripIdx[i]++; upd(); choose(); };
-      card.onclick = choose; card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(); } };
-      box.appendChild(card); upd();
+      const gr = c.grips[pickGripIdx(c)];
+      makeCard(box, { grip: gr, root: c.root, title: c.name, sub: c.roman,
+        onTap: () => { if (gr) strum(gripNotes(gr)); st.selChord = i; st.selGrip = 0; st.progShown = -1; refresh(); },
+        onAdd: () => addStep({ k: 0, deg: i, flav: flavourOf(i), lock: gr ? gr.frets.slice() : undefined }) });
     });
+  }
+  const maskCache = {};
+  function scaleMask(i) { const k = st.root + ':' + i; if (!(k in maskCache)) maskCache[k] = call('fret_scale', st.root, i).mask; return maskCache[k]; }
+
+  // ================= PROGRESSION panel: library, solver ranks, play, steps =================
+  let playTimer = 0;
+  function stopPlay() { clearTimeout(playTimer); if (st.playing >= 0) { st.playing = -1; drawNeck(); renderProg(); } }
+  function playFrom(i) {
+    if (!st.prog || !st.prog.solutions.length || i >= st.progression.length) { stopPlay(); return; }
+    st.playing = i; const g = progGrip(i); if (g) strum(gripNotes(g));
+    drawNeck(); document.querySelectorAll('#progStrip .card').forEach((el, k) => el.classList.toggle('playing', k === i));
+    playTimer = setTimeout(() => playFrom(i + 1), 1300);
+  }
+  function renderProg() {
+    const head = $('progHead'), box = $('progStrip'); head.textContent = ''; box.textContent = '';
+    const lib = loadLib();
+    // library dropdown
+    const sel = document.createElement('select'); sel.className = 'pill'; sel.setAttribute('aria-label', 'Progression library');
+    const own = lib.find(p => p.name === st.libName);
+    sel.innerHTML = `<option value="">${st.libName ? esc(st.libName) : 'Library'}</option>`
+      + `<optgroup label="Presets">${FACTORY.map((p, i) => `<option value="f${i}">${esc(p.name)}</option>`).join('')}</optgroup>`
+      + (lib.length ? `<optgroup label="My progressions">${lib.map((p, i) => `<option value="u${i}">${esc(p.name)}</option>`).join('')}</optgroup>` : '')
+      + `<optgroup label="Actions"><option value="save"${st.progression.length ? '' : ' disabled'}>Save as…</option>`
+      + (own ? `<option value="over">Save over “${esc(own.name)}”</option><option value="del">Delete “${esc(own.name)}”</option>` : '') + '</optgroup>';
+    sel.onchange = () => {
+      const v = sel.value; sel.value = '';
+      if (v[0] === 'f' || v[0] === 'u') {
+        const p = v[0] === 'f' ? FACTORY[+v.slice(1)] : lib[+v.slice(1)];
+        stopPlay(); st.root = p.root; st.scale = p.scale; st.progression = JSON.parse(JSON.stringify(p.steps));
+        if (p.tuning !== undefined) st.tuning = p.tuning;
+        st.progRank = 0; st.progShown = st.progEdit = -1; st.selChord = st.selGrip = -1; st.customMode = false; st.libName = p.name;
+        refresh(); if (st.prog && st.prog.solutions.length) playFrom(0);
+      } else if (v === 'save') { saving = true; renderProg(); }
+      else if (v === 'over' && own) { own.root = st.root; own.scale = st.scale; own.tuning = st.tuning; own.steps = JSON.parse(JSON.stringify(st.progression)); saveLib(lib); flash('Saved over “' + own.name + '”.'); }
+      else if (v === 'del' && own) { saveLib(lib.filter(p => p !== own)); st.libName = ''; save(); renderProg(); }
+    };
+    head.appendChild(sel);
+
+    if (saving) {
+      const inp = document.createElement('input'); inp.className = 'name'; inp.placeholder = 'Name'; inp.id = 'saveName'; inp.maxLength = 40;
+      inp.value = `${nm(st.root)} ${st.meta.scales[st.scale]} ${lib.length + 1}`;
+      const doSave = () => {
+        const name = inp.value.trim(); if (!name) return;
+        const l = loadLib().filter(p => p.name !== name);
+        l.push({ name, root: st.root, scale: st.scale, tuning: st.tuning, steps: JSON.parse(JSON.stringify(st.progression)) });
+        l.sort((a, b) => a.name.localeCompare(b.name)); saveLib(l); st.libName = name; saving = false; save(); renderProg();
+      };
+      inp.onkeydown = e => { if (e.key === 'Enter') doSave(); if (e.key === 'Escape') { saving = false; renderProg(); } };
+      head.append(inp, pill('Save', { onClick: doSave }), pill('Cancel', { onClick: () => { saving = false; renderProg(); } }));
+      setTimeout(() => { inp.focus(); inp.select(); }, 0);
+    } else {
+      const title = document.createElement('div'); title.className = 'title'; title.id = 'progTitle';
+      title.innerHTML = st.progression.length ? `Progression <span>&middot; ${st.progression.length} steps</span>` : 'Progression';
+      const liveLbl = document.createElement('span'); liveLbl.className = 'live'; liveLbl.id = 'liveLbl';
+      head.append(title, liveLbl);
+    }
+    head.append(pill('Mic', { pressed: micOn, title: 'Show the note you play on the guitar', onClick: toggleMic }),
+                pill('MIDI', { pressed: midiOn, title: 'Spotlight held MIDI chords; follows Launchkey scale CCs', onClick: toggleMidi }));
+    const nSol = st.prog ? st.prog.solutions.length : 0;
+    if (nSol > 1) {
+      head.append(pill('‹', { disabled: st.progRank <= 0, onClick: () => { st.progRank--; refresh(); } }));
+      const r = document.createElement('span'); r.className = 'rank'; r.textContent = `${st.progRank + 1}/${nSol}`; head.append(r);
+      head.append(pill('›', { disabled: st.progRank >= nSol - 1, onClick: () => { st.progRank++; refresh(); } }));
+    }
+    if (st.progression.length) {
+      head.append(pill(st.playing >= 0 ? '■' : '▶', { title: st.playing >= 0 ? 'Stop' : 'Play the progression', onClick: () => st.playing >= 0 ? stopPlay() : playFrom(0) }),
+                  pill('Clear', { onClick: () => { stopPlay(); st.progression = []; st.progShown = st.progEdit = -1; st.progRank = 0; st.libName = ''; refresh(); } }));
+    }
+    updateLive();
+
+    if (!st.progression.length) { box.innerHTML = '<p class="empty">Tap + on a chord to add it, or pick a preset from the Library.</p>'; return; }
+    if (!st.prog || !nSol) { box.innerHTML = '<p class="empty">No playable fretting for this progression in this tuning.</p>'; return; }
+    st.progression.forEach((p, i) => {
+      const s = st.prog.steps[i];
+      const card = makeCard(box, { grip: progGrip(i), root: s.root, title: s.name, sub: String(i + 1), sel: i === st.progEdit || i === st.progShown, locked: !!p.lock,
+        onTap: () => { if (card.dataset.dragged) { delete card.dataset.dragged; return; } stopPlay(); const g = progGrip(i); if (g) strum(gripNotes(g));
+                       st.progShown = i; st.progEdit = i; st.customMode = false; st.selChord = st.selGrip = -1; refresh(); },
+        onRemove: () => { stopPlay(); st.progression.splice(i, 1); st.progShown = st.progEdit = -1; st.libName = ''; refresh(); } });
+      if (i === st.playing) card.classList.add('playing');
+      dragReorder(card, i, box);
+    });
+  }
+  function dragReorder(card, i, box) {   // horizontal drag to move a step (ChordDiagram::onDragEnd)
+    let x0 = 0, pid = null, moved = false;
+    card.addEventListener('pointerdown', e => { if (e.target.closest('.mini')) return; x0 = e.clientX; pid = e.pointerId; moved = false; });
+    card.addEventListener('pointermove', e => {
+      if (pid !== e.pointerId) return; const dx = e.clientX - x0;
+      if (!moved && Math.abs(dx) > 8) { moved = true; card.setPointerCapture(pid); card.classList.add('dragging'); }
+      if (moved) card.style.transform = `translateX(${dx}px)`;
+    });
+    const end = e => {
+      if (pid !== e.pointerId) return; pid = null; if (!moved) return;
+      card.dataset.dragged = '1'; card.classList.remove('dragging');
+      const pitch = card.offsetWidth + 7, dx = e.clientX - x0;
+      const slot = Math.max(0, Math.min(st.progression.length - 1, i + Math.round(dx / pitch)));
+      card.style.transform = '';
+      if (slot !== i) { const [p] = st.progression.splice(i, 1); st.progression.splice(slot, 0, p); st.progShown = slot; st.progEdit = -1; st.libName = ''; refresh(); }
+    };
+    card.addEventListener('pointerup', end); card.addEventListener('pointercancel', end);
   }
 
   // ================= boot =================
@@ -484,9 +818,9 @@ select.hit { -webkit-appearance: none; }
     st.meta = call('fret_meta');
     st.scale = Math.min(st.scale, st.meta.scales.length - 1); st.tuning = Math.min(st.tuning, st.meta.tunings.length - 1);
     st.overlays.forEach(o => o.scale = Math.min(o.scale, st.meta.scales.length - 1));
-    layout(); wire(); refresh(false);
-    if (document.fonts) document.fonts.ready.then(() => { drawChrome(); drawNeck(); renderStrip(); });
-  }).catch(err => { $('status').textContent = 'Could not load (' + err.message + '). Reload the page to try again.'; });
+    layout(); wire(); refresh();
+    if (document.fonts) document.fonts.ready.then(() => { drawChrome(); drawNeck(); renderChords(); renderProg(); });
+  }).catch(err => { const el = $('error'); el.hidden = false; el.textContent = 'Fret could not load (' + err.message + '). Reload the page to try again.'; });
 })();
 </script>
 
