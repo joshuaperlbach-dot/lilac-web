@@ -132,13 +132,13 @@ input.name { font: 13px "Barlow", sans-serif; color: var(--fg); background: var(
     root: 9, scale: 1, tuning: 0, pos: -1, sevenths: false, degrees: false, sound: true,
     overlays: [{ on: false, scale: 2 }, { on: false, scale: 5 }],
     degreeFlavour: Array(12).fill(-1), chosenGrips: {},
-    progression: [], progRank: 0, libName: '',
+    progression: [], progRank: 0, libName: '', libKey: null,
     customMode: false, customFrets: [],
     // transient
     selChord: -1, selGrip: -1, progShown: -1, progEdit: -1, playing: -1,
     meta: null, scaleInfo: null, ovInfo: [null, null], chords: [], grips: [], prog: null,
   };
-  const PERSIST = ['root','scale','tuning','pos','sevenths','degrees','sound','overlays','degreeFlavour','chosenGrips','progression','progRank','libName','customMode','customFrets'];
+  const PERSIST = ['root','scale','tuning','pos','sevenths','degrees','sound','overlays','degreeFlavour','chosenGrips','progression','progRank','libName','libKey','customMode','customFrets'];
   try { const s = JSON.parse(localStorage.getItem('fretweb4') || '{}'); for (const k of PERSIST) if (k in s) st[k] = s[k]; } catch (e) {}
   const save = () => { try { const o = {}; for (const k of PERSIST) o[k] = st[k]; localStorage.setItem('fretweb4', JSON.stringify(o)); } catch (e) {} };
 
@@ -642,7 +642,7 @@ input.name { font: 13px "Barlow", sans-serif; color: var(--fg); background: var(
   // ================= CHORDS panel: overview / variants / custom / progression-step chooser =================
   function addStep(step) {
     if (st.progression.length >= MAX_STEPS) { flash('The progression is full (16 steps).'); return; }
-    st.progression.push(step); st.progRank = 0; st.libName = ''; refresh();
+    st.progression.push(step); st.progRank = 0; st.libName = ''; st.libKey = null; refresh();
   }
   function renderChords() {
     const head = $('chordsHead'), box = $('chordStrip'); head.textContent = ''; box.textContent = '';
@@ -681,7 +681,7 @@ input.name { font: 13px "Barlow", sans-serif; color: var(--fg); background: var(
       st.grips.forEach(gr => makeCard(box, { grip: gr, root: step.root, title: step.name, sel: cur && sameFrets(gr.frets, cur.frets), onTap: () => {
         const p = st.progression[st.progEdit]; strum(gripNotes(gr));
         if (p.lock && sameFrets(p.lock, gr.frets)) delete p.lock; else p.lock = gr.frets.slice();
-        st.progShown = st.progEdit; st.progEdit = -1; st.libName = ''; refresh();
+        st.progShown = st.progEdit; st.progEdit = -1; st.libName = ''; st.libKey = null; refresh();
       } }));
       return;
     }
@@ -725,7 +725,13 @@ input.name { font: 13px "Barlow", sans-serif; color: var(--fg); background: var(
     // library dropdown
     const sel = document.createElement('select'); sel.className = 'pill'; sel.setAttribute('aria-label', 'Progression library');
     const own = lib.find(p => p.name === st.libName);
-    sel.innerHTML = `<option value="">${st.libName ? esc(st.libName) : 'Library'}</option>`
+    // key readout: the loaded entry's name + the key it plays in now, and its original key when
+    // the root dial has moved it (steps are degrees, so a turned dial transposes the progression)
+    const keyName = (r, sc) => `${nm(r)} ${st.meta.scales[sc].toLowerCase()}`;
+    const moved = st.libKey && (st.libKey.root !== st.root || st.libKey.scale !== st.scale);
+    const label = st.libName ? `${st.libName} \u00b7 ${keyName(st.root, st.scale)}${moved ? ` (orig. ${keyName(st.libKey.root, st.libKey.scale)})` : ''}` : 'Library';
+    sel.style.maxWidth = '260px';
+    sel.innerHTML = `<option value="">${esc(label)}</option>`
       + `<optgroup label="Presets">${FACTORY.map((p, i) => `<option value="f${i}">${esc(p.name)}</option>`).join('')}</optgroup>`
       + (lib.length ? `<optgroup label="My progressions">${lib.map((p, i) => `<option value="u${i}">${esc(p.name)}</option>`).join('')}</optgroup>` : '')
       + `<optgroup label="Actions"><option value="save"${st.progression.length ? '' : ' disabled'}>Save as…</option>`
@@ -736,11 +742,11 @@ input.name { font: 13px "Barlow", sans-serif; color: var(--fg); background: var(
         const p = v[0] === 'f' ? FACTORY[+v.slice(1)] : lib[+v.slice(1)];
         stopPlay(); st.root = p.root; st.scale = p.scale; st.progression = JSON.parse(JSON.stringify(p.steps));
         if (p.tuning !== undefined) st.tuning = p.tuning;
-        st.progRank = 0; st.progShown = st.progEdit = -1; st.selChord = st.selGrip = -1; st.customMode = false; st.libName = p.name;
+        st.progRank = 0; st.progShown = st.progEdit = -1; st.selChord = st.selGrip = -1; st.customMode = false; st.libName = p.name; st.libKey = { root: p.root, scale: p.scale };
         refresh(); if (st.prog && st.prog.solutions.length) playFrom(0);
       } else if (v === 'save') { saving = true; renderProg(); }
-      else if (v === 'over' && own) { own.root = st.root; own.scale = st.scale; own.tuning = st.tuning; own.steps = JSON.parse(JSON.stringify(st.progression)); saveLib(lib); flash('Saved over “' + own.name + '”.'); }
-      else if (v === 'del' && own) { saveLib(lib.filter(p => p !== own)); st.libName = ''; save(); renderProg(); }
+      else if (v === 'over' && own) { own.root = st.root; own.scale = st.scale; own.tuning = st.tuning; own.steps = JSON.parse(JSON.stringify(st.progression)); saveLib(lib); st.libKey = { root: st.root, scale: st.scale }; save(); renderProg(); flash('Saved over “' + own.name + '”.'); }
+      else if (v === 'del' && own) { saveLib(lib.filter(p => p !== own)); st.libName = ''; st.libKey = null; save(); renderProg(); }
     };
     head.appendChild(sel);
 
@@ -751,14 +757,14 @@ input.name { font: 13px "Barlow", sans-serif; color: var(--fg); background: var(
         const name = inp.value.trim(); if (!name) return;
         const l = loadLib().filter(p => p.name !== name);
         l.push({ name, root: st.root, scale: st.scale, tuning: st.tuning, steps: JSON.parse(JSON.stringify(st.progression)) });
-        l.sort((a, b) => a.name.localeCompare(b.name)); saveLib(l); st.libName = name; saving = false; save(); renderProg();
+        l.sort((a, b) => a.name.localeCompare(b.name)); saveLib(l); st.libName = name; st.libKey = { root: st.root, scale: st.scale }; saving = false; save(); renderProg();
       };
       inp.onkeydown = e => { if (e.key === 'Enter') doSave(); if (e.key === 'Escape') { saving = false; renderProg(); } };
       head.append(inp, pill('Save', { onClick: doSave }), pill('Cancel', { onClick: () => { saving = false; renderProg(); } }));
       setTimeout(() => { inp.focus(); inp.select(); }, 0);
     } else {
       const title = document.createElement('div'); title.className = 'title'; title.id = 'progTitle';
-      title.innerHTML = st.progression.length ? `Progression <span>&middot; ${st.progression.length} steps</span>` : 'Progression';
+      title.innerHTML = st.progression.length ? `Progression <span>&middot; ${st.progression.length} steps in ${esc(keyName(st.root, st.scale))}</span>` : 'Progression';
       const liveLbl = document.createElement('span'); liveLbl.className = 'live'; liveLbl.id = 'liveLbl';
       head.append(title, liveLbl);
     }
@@ -772,7 +778,7 @@ input.name { font: 13px "Barlow", sans-serif; color: var(--fg); background: var(
     }
     if (st.progression.length) {
       head.append(pill(st.playing >= 0 ? '■' : '▶', { title: st.playing >= 0 ? 'Stop' : 'Play the progression', onClick: () => st.playing >= 0 ? stopPlay() : playFrom(0) }),
-                  pill('Clear', { onClick: () => { stopPlay(); st.progression = []; st.progShown = st.progEdit = -1; st.progRank = 0; st.libName = ''; refresh(); } }));
+                  pill('Clear', { onClick: () => { stopPlay(); st.progression = []; st.progShown = st.progEdit = -1; st.progRank = 0; st.libName = ''; st.libKey = null; refresh(); } }));
     }
     updateLive();
 
@@ -783,7 +789,7 @@ input.name { font: 13px "Barlow", sans-serif; color: var(--fg); background: var(
       const card = makeCard(box, { grip: progGrip(i), root: s.root, title: s.name, sub: String(i + 1), sel: i === st.progEdit || i === st.progShown, locked: !!p.lock,
         onTap: () => { if (card.dataset.dragged) { delete card.dataset.dragged; return; } stopPlay(); const g = progGrip(i); if (g) strum(gripNotes(g));
                        st.progShown = i; st.progEdit = i; st.customMode = false; st.selChord = st.selGrip = -1; refresh(); },
-        onRemove: () => { stopPlay(); st.progression.splice(i, 1); st.progShown = st.progEdit = -1; st.libName = ''; refresh(); } });
+        onRemove: () => { stopPlay(); st.progression.splice(i, 1); st.progShown = st.progEdit = -1; st.libName = ''; st.libKey = null; refresh(); } });
       if (i === st.playing) card.classList.add('playing');
       dragReorder(card, i, box);
     });
@@ -802,7 +808,7 @@ input.name { font: 13px "Barlow", sans-serif; color: var(--fg); background: var(
       const pitch = card.offsetWidth + 7, dx = e.clientX - x0;
       const slot = Math.max(0, Math.min(st.progression.length - 1, i + Math.round(dx / pitch)));
       card.style.transform = '';
-      if (slot !== i) { const [p] = st.progression.splice(i, 1); st.progression.splice(slot, 0, p); st.progShown = slot; st.progEdit = -1; st.libName = ''; refresh(); }
+      if (slot !== i) { const [p] = st.progression.splice(i, 1); st.progression.splice(slot, 0, p); st.progShown = slot; st.progEdit = -1; st.libName = ''; st.libKey = null; refresh(); }
     };
     card.addEventListener('pointerup', end); card.addEventListener('pointercancel', end);
   }
