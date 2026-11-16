@@ -816,6 +816,18 @@ input.name { font: 13px "Barlow", sans-serif; color: var(--fg); background: var(
   }
 
   // ================= boot =================
+  // Keep the screen awake while Fret is open (Screen Wake Lock: Safari 16.4+, Chrome). The lock
+  // drops whenever the page is hidden, so it is taken again on return; some browsers only grant
+  // it after a touch, hence the retry on the first pointerdown.
+  let wakeLock = null;
+  const keepAwake = () => {
+    if (!('wakeLock' in navigator) || document.visibilityState !== 'visible' || wakeLock) return;
+    navigator.wakeLock.request('screen').then(l => { wakeLock = l; l.addEventListener('release', () => { wakeLock = null; }); }).catch(() => {});
+  };
+  document.addEventListener('visibilitychange', keepAwake);
+  document.addEventListener('pointerdown', keepAwake);
+  keepAwake();
+
   const stub = new Proxy({}, { get: () => () => 0 });   // reactor WASI module: no file/clock use
   Promise.all([
     fetch('fret.wasm').then(r => { if (!r.ok) throw new Error('fret.wasm HTTP ' + r.status); return r.arrayBuffer(); }).then(b => WebAssembly.instantiate(b, { wasi_snapshot_preview1: stub })),
